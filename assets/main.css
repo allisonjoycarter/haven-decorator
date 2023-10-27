@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .bg-container {
+    @apply container mx-auto bg-gray-200 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
+  }
+
+  .btn-primary {
+    @apply py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md transition-all ease-in duration-200 hover:bg-indigo-400;
+  }
+
+  .btn-text {
+    @apply py-2 font-semibold text-indigo-900 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-400 hover:bg-indigo-700 hover:bg-opacity-30;
+  }
+
+  .btn-text-secondary {
+    @apply py-2 font-semibold text-indigo-900 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-400 hover:bg-indigo-700 hover:bg-opacity-30;
+  }
+
+  .elevated-card {
+    @apply bg-gray-200 dark:bg-gray-800 p-4 rounded-lg drop-shadow-lg;
+  }
+}
+
+html {
+  @apply bg-gray-200 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
+}
+
+a {
+  @apply text-indigo-500 dark:text-indigo-400 underline;
+}
