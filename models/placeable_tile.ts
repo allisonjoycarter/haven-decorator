@@ -2,6 +2,7 @@
 interface PlaceableTile {
   x: number;
   y: number;
+  outOfBounds: boolean;
   isDragged: boolean;
   isPlacementOrigin: boolean;
   origin: string|undefined;

@@ -108,6 +108,10 @@
   import buildingSizes from '~/models/building_sizes.json'
   import type { PlacedItem } from '~/models/placed_item';
 
+  const props = defineProps<{
+    mapName: string,
+  }>()
+
   const isHoveringPlanner = ref(false)
   
   const planner = ref(null as null|HTMLElement)
@@ -184,14 +188,14 @@
 
   function saveAsImage() {
     const link = (savingPlaceholder.value as any)
-    link.download = "SunHavenFarm.png";
+    link.download = `${props.mapName}.png`;
     link.href = (scaledCanvas.value as HTMLCanvasElement).toDataURL();
     link.click();
   }
 
   function saveAsFile() {
     let data = {
-      base: "Sun Haven Farm",
+      base: props.mapName,
       tileData: {} as any,
       subtileData: subtileData.value,
     }
@@ -210,7 +214,7 @@
     const url = URL.createObjectURL(file)
     const link = savingPlaceholder.value as any
     link.href = url
-    link.download = "SunHavenFarm.json"
+    link.download = `${props.mapName}.json`
     link.click()
   }
   
@@ -341,6 +345,7 @@
           previousTileData.value.set(`${tile.x}-${tile.y}`, {
             x: tile.x, y: tile.y,
             isDragged: false,
+            outOfBounds: true,
             usedFor: tile.usedFor,
             usedForWidth: tile.usedForWidth,
             origin: tile.origin,
@@ -367,6 +372,7 @@
           previousTileData.value.set(`${tile.x}-${tile.y}`, {
             x: tile.x, y: tile.y,
             isDragged: false,
+            outOfBounds: true,
             usedFor: tile.usedFor,
             usedForWidth: tile.usedForWidth,
             origin: tile.origin,
@@ -621,19 +627,25 @@
 <style scoped>
 
 .planner-area {
+  /* 
   background: url("https://assets.havendecorator.com/decorations/sun_haven_farm_smaller.png") left top transparent;
   height: 2008px;
-  width: 1868px;
+  width: 1868px; 
+  */
 }
 
 .planner-grid {
+  /*
   background: url("https://assets.havendecorator.com/decorations/sun_haven_farm_smaller_grid.png") left top transparent;
   height: 2008px;
+  */
 }
 
 .full-size {
+  /* 
   height: 2008px;
   width: 1868px;
+  */
 }
 
 .mouse-lines-horizontal {
@@ -670,7 +682,6 @@
   left: -12px;
 }
 
-
 .tile {
   height: 24px;
   width: 24px;
@@ -681,6 +692,5 @@
   z-index: 1;
   position: absolute;
 }
-
 
 </style>

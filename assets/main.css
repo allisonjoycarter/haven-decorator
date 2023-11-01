@@ -24,10 +24,27 @@
   }
 }
 
+input[type=file]::file-selector-button {
+  @apply btn-primary py-3;
+  border: none;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background .2s ease-in-out;
+}
+
 html {
   @apply bg-gray-200 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
 }
 
 a {
   @apply text-indigo-500 dark:text-indigo-400 underline;
+}
+
+.no-select {
+  -khtml-user-select: none;
+  -o-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
