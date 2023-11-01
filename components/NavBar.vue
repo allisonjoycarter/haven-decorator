@@ -28,12 +28,11 @@
   const mainStore = useMainStore()
 
   const tabs = [
-    { route: "/", name: "Home" },
     { route: "/customizer", name: "Customizer" },
+    { route: "/planner", name: "Planner" },
     { route: "/about", name: "About" }
   ]
   const currentTab = ref(tabs[0].route)
-
   const currentRoute = computed(() => route.path)
 </script>
 
