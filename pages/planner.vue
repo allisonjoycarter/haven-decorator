@@ -1,7 +1,14 @@
 <template>
-  <div class="">
+  <div class="flex flex-col">
+    <div class="flex flex-row gap-4">
+      <button class="btn-text" @click="planning = plannerAreas[0]">Sun Haven</button>
+      <button class="btn-text" @click="planning = plannerAreas[1]">Nel'Vari</button>
+    </div>
     <div v-if="planning === plannerAreas[0]">
       <PlannerSunHavenFarm/>
+    </div>
+    <div v-if="planning === plannerAreas[1]">
+      <PlannerNelVariFarm/>
     </div>
   </div>
 </template>
@@ -18,7 +25,7 @@ useSeoMeta({
 
 const plannerAreas = [
   "Sun Haven Farm",
-  "Workshop"
+  "NelVari Farm"
 ]
 const planning = ref(plannerAreas[0])
 

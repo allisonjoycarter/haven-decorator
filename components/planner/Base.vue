@@ -1,5 +1,5 @@
 <template>
-  <div class="py-3 mx-6 mb-4 full-size">
+  <div class="py-3 mx-6 mb-4" :style="fullSizeStyle">
     <a ref="savingPlaceholder"/>
     <div class="relative border-none outline-none ring-0" tabindex="0" ref="planner"
       @mouseover="mouseEnteredPlanner()"
@@ -31,7 +31,7 @@
       >
         <div style="height: 600px" class="overflow-scroll">
           <div style="height: 1000px; width: 800px;" class="overflow-y-hidden overflow-x-scroll">
-            <canvas ref="originalCanvas" width=1850 height=2000 class="scale-50 origin-top-left">
+            <canvas ref="originalCanvas" :width="imageWidth" :height="imageHeight" class="scale-50 origin-top-left">
             </canvas>
           </div>
         </div>
@@ -45,7 +45,7 @@
           :width="placingWidth"
           :src="'https://assets.havendecorator.com/decorations/Planner/' + isPlacing + '.png'"/>
       </div>
-      <div class="full-size absolute top-0 left-0 overflow-hidden">
+      <div class="absolute top-0 left-0 overflow-hidden" :style="fullSizeStyle">
         <div v-show="showMouseIndicator" ref="mouseIndicator" class="absolute">
           <div class="mouse-lines-vertical"></div>
           <div class="mouse-lines-horizontal"></div>
@@ -54,10 +54,10 @@
       </div>
       <div>
         <div
-          class="planner-area"
+          :style="mapBackgroundStyle + fullSizeStyle"
           ref="plannerArea"
           >
-          <div :style="'opacity: ' + gridOpacity / 100">
+          <div :style="mapGridBackgroundStyle + fullSizeStyle + ' opacity: ' + gridOpacity / 100">
             <div :class="'planner-grid'" ref="plannerGrid" @dragstart="(event) => event.preventDefault()"></div>
           </div>
           <div>
@@ -110,6 +110,14 @@
 
   const props = defineProps<{
     mapName: string,
+    backgroundImage: string,
+    backgroundGridImage: string,
+    imageHeight: number,
+    imageWidth: number,
+    gridOffsetTop: number,
+    gridOffsetLeft: number,
+    verticalTileThreshold: number,
+    horizontalTileThreshold: number,
   }>()
 
   const isHoveringPlanner = ref(false)
@@ -121,15 +129,12 @@
   const gridOpacity = ref(40)
   
   const originalCanvas = ref(null as null|HTMLCanvasElement)
-  const scaledCanvas = ref(null as null|HTMLCanvasElement)
   const savingPlaceholder = ref(null as null|HTMLElement)
   const isLoadComplete = ref(false)
   
   const marginTop = ref(0)
   const marginLeft = ref(0)
 
-  const gridOffsetTop = ref(1)
-  const gridOffsetLeft = ref(7)
   
   const placeOnDragEnd = ref(undefined as string|undefined)
   const isDragging = ref(false)
@@ -160,6 +165,18 @@
     return isHoveringPlanner.value && (isPlacing.value === undefined || placeOnDragEnd.value !== undefined)
   })
 
+  const fullSizeStyle = computed(() => {
+    return `height: ${props.imageHeight}px; width: ${props.imageWidth}px;`
+  })
+
+  const mapBackgroundStyle = computed(() => {
+    return `background: url("${props.backgroundImage}") left top transparent;`
+  })
+
+  const mapGridBackgroundStyle = computed(() => {
+    return `background: url("${props.backgroundGridImage}") left top transparent;`
+  })
+
   onMounted(() => {
     if (plannerArea.value !== null) {
       console.log(plannerArea.value)
@@ -168,8 +185,8 @@
       marginLeft.value = rect.x;
     }
 
-    for (var x = gridOffsetLeft.value; x <= 1868; x += 24) {
-      for (var y = gridOffsetTop.value; y <= 2008; y += 24) {
+    for (var x = props.gridOffsetLeft; x <= 1868; x += 24) {
+      for (var y = props.gridOffsetTop; y <= 2008; y += 24) {
         tileData.value.set(`${x}-${y}`, {
           x: x,
           y: y,
@@ -189,7 +206,7 @@
   function saveAsImage() {
     const link = (savingPlaceholder.value as any)
     link.download = `${props.mapName}.png`;
-    link.href = (scaledCanvas.value as HTMLCanvasElement).toDataURL();
+    link.href = (originalCanvas.value as HTMLCanvasElement).toDataURL();
     link.click();
   }
 
@@ -228,13 +245,13 @@
 
     if (context !== null) {
       const farmImage = new Image()
-      farmImage.src = "https://assets.havendecorator.com/decorations/sun_haven_farm_smaller.png"
+      farmImage.src = props.backgroundImage
       farmImage.onload = function() {
         context.drawImage(farmImage, 0, 0)
       }
   
       const gridImage = new Image()
-      gridImage.src = "https://assets.havendecorator.com/decorations/sun_haven_farm_smaller_grid.png"
+      gridImage.src = props.backgroundGridImage
       gridImage.onload = function() {
         context.globalAlpha = gridOpacity.value!! / 100
         context.drawImage(gridImage, 0, 0)
@@ -246,7 +263,13 @@
         decoImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + item.itemName + '.png'
         decoImage.onload = function() {
           console.log("drawing subtile item", item.itemName)
-          context.drawImage(decoImage, item.xStart, item.yStart)
+          context.drawImage(
+            decoImage,
+            // x, y to draw at
+            item.xStart, item.yStart,
+            // width, height of drawn image
+            item.imageWidth, item.imageHeight,
+            )
         }
       })
 
@@ -273,8 +296,8 @@
     const fr = new FileReader();
 
     fr.onload = (e: any) => {
-      for (var x = gridOffsetLeft.value; x <= 1868; x += 24) {
-        for (var y = gridOffsetTop.value; y <= 2008; y += 24) {
+      for (var x = props.gridOffsetLeft; x <= 1868; x += 24) {
+        for (var y = props.gridOffsetTop; y <= 2008; y += 24) {
           tileData.value.set(`${x}-${y}`, {
             x: x,
             y: y,
@@ -535,11 +558,13 @@
       xEnd: subtilePosition.x + (placingSizeX.value * 4),
       yStart: subtilePosition.y,
       yEnd: subtilePosition.y + (placingSizeY.value * 4),
+      imageHeight: size.height,
+      imageWidth: size.width,
       itemName: isPlacing.value!,
       coversTiles: [] as string[]
     }
     
-    const tileX = Math.round(subtilePosition.x / 24) * 24 + gridOffsetLeft.value
+    const tileX = Math.round(subtilePosition.x / 24) * 24 + props.gridOffsetLeft
     const position = getTilePositionAt(tileX, size.bottom - marginTop.value)
     
     const tileWidth = Math.ceil(placingSizeX.value / 6)
@@ -565,22 +590,22 @@
   }
     
   function getTilePositionAt(x: number, y: number) {
-    const nearestLeft = roundAt((x / 24), .9) * 24
-    const nearestTop = roundAt((y / 24), .7) * 24
+    const nearestLeft = roundAt((x / 24), props.horizontalTileThreshold) * 24
+    const nearestTop = roundAt((y / 24), props.verticalTileThreshold) * 24
     
     return {
-      x: nearestLeft + gridOffsetLeft.value,
-      y: nearestTop + gridOffsetTop.value
+      x: nearestLeft + props.gridOffsetLeft,
+      y: nearestTop + props.gridOffsetTop
     }
   }
 
   function getSubtilePositionAt(x: number, y: number) {
-    const nearestLeft = roundAt((x / 4), .9) * 4
-    const nearestTop = roundAt((y / 4), .7) * 4
+    const nearestLeft = roundAt((x / 4), props.horizontalTileThreshold) * 4
+    const nearestTop = roundAt((y / 4), props.verticalTileThreshold) * 4
     
     return {
-      x: nearestLeft + gridOffsetLeft.value,
-      y: nearestTop + gridOffsetTop.value
+      x: nearestLeft + props.gridOffsetLeft,
+      y: nearestTop + props.gridOffsetTop
     }
   }
 
@@ -626,27 +651,23 @@
 
 <style scoped>
 
+/* 
+Each Map needs the following css:
+
 .planner-area {
-  /* 
   background: url("https://assets.havendecorator.com/decorations/sun_haven_farm_smaller.png") left top transparent;
   height: 2008px;
   width: 1868px; 
-  */
 }
-
 .planner-grid {
-  /*
   background: url("https://assets.havendecorator.com/decorations/sun_haven_farm_smaller_grid.png") left top transparent;
   height: 2008px;
-  */
 }
-
 .full-size {
-  /* 
   height: 2008px;
   width: 1868px;
-  */
 }
+*/
 
 .mouse-lines-horizontal {
   border-top: 2px solid white;
