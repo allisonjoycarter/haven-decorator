@@ -34,16 +34,18 @@
           </p>
         </div>
       </div>
-      <!--
+      
         <div>
-          <div class="mb-8">
+          <div class="my-4 elevated-card">
             <h3>Analytics</h3>
             <div>
-              Analytics disclaimer
+              This website collects data to track page views, button clicks, and other relevant data to 
+              understand usage and performance. We use Azure Application Insights to track this data so we can 
+              improve this website. To see more details, go to the <a href="/privacy-policy">Privacy Policy</a>. 
+              For questions about this policy, contact doubleterrainbow@gmail.com  
             </div>
           </div>
         </div>
-      -->
     </div>
   </div>
 </template>

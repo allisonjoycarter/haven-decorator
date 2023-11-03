@@ -1,29 +1,30 @@
 <template>
-  <div>
+  <div class="flex flex-col">
     <input type="text"
-      class="p-2 rounded-sm z-50
+      class="p-2 rounded-md drop-shadow-lg
+            border-2 border-gray-300 dark:border-gray-500
           bg-gray-100 dark:bg-gray-700 
-            focus:ring-2  focus:ring-indigo-800 
-            ring-inset
+            focus:ring-2 focus:ring-indigo-400 focus:dark:ring-indigo-800 
+            outline-none
             "
       v-model="search"
       @input="searchOptions()"
       :placeholder="placeholder"
     />
     <div 
-      class="absolute w-full pr-4 top-44 z-50 dark:bg-gray-700 bg-gray-100 drop-shadow-lg rounded-sm">
-      <div v-if="results.length === 0">
-        <p>No results match your search.</p>
+      class=" w-full pr-4 mt-1 dark:bg-gray-700 bg-gray-100 drop-shadow-lg rounded-md">
+      <div v-if="results.length === 0 && search !== ''">
+        <p class="text-sm px-4 py-1">No results match your search.</p>
       </div>
       <div v-else>
         <button 
-          class="m-2 p-2 rounded-sm z-50 w-full hover:bg-gray-300 hover:dark:bg-gray-500 flex flex-row gap-2 items-center"
+          class="m-2 p-2 rounded-md z-50 w-full hover:bg-gray-300 hover:dark:bg-gray-500 flex flex-row gap-2 items-center"
           v-for="(option, index) in results"
           :key="index"
           @click="selectOption(option.name)"
         >
           <img v-if="option.image !== undefined" :src="option.image" class="max-h-20">
-          {{ option.name }}
+          {{ option.name.replace("NelVari", "Nel'Vari") }}
         </button>
       </div>
     </div>
@@ -46,7 +47,6 @@
   })
 
   function selectOption(option: string) {
-    console.log("selecting", option)
     emit('selected', option)
   }
 

@@ -19,6 +19,9 @@ const findMostFrequent = (str = '', num = 1) => {
 // main is the name of the store. It is unique across your application
 // and will appear in devtools
 export const useCustomizationsStore = defineStore('customizations', {
+  persist: {
+    storage: persistedState.localStorage,
+  },
   // a function that returns a fresh state
   state: () => ({
     savedSets: Array<CustomSet>(),

@@ -139,6 +139,7 @@ useSeoMeta({
   twitterCard: 'summary',
 })
 
+
 const store = useCustomizationsStore()
 const blobURL =
   "https://farmdecoratorassets.blob.core.windows.net/decorations/";

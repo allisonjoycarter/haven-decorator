@@ -8,14 +8,22 @@
           v-for="item in tabs"
           class="mx-2"
         >
-          <NuxtLink class="py-2 no-underline text-gray-900 dark:text-gray-300" :to="item.route">
+          <NuxtLink 
+            :class="{
+              'py-2 no-underline  font-semibold': true,
+              'text-indigo-800 dark:text-indigo-200': item.route === currentRoute,
+              'text-gray-900 dark:text-gray-300': item.route !== currentRoute
+            }" :to="item.route">
             {{ item.name }}
           </NuxtLink>
           
           <div 
-            v-if="item.route === currentRoute"
             style="width: 100%; height: 2px;"
-            class="transition ease-in-out bg-indigo-700"></div>
+            :class="{
+              'transition-colors ease-in-out': true,
+              'bg-transparent': item.route !== currentRoute,
+              'bg-indigo-700': item.route === currentRoute,
+            }"></div>
         </div>
       </div>
     </div>
@@ -25,14 +33,12 @@
   import { ref, onMounted, computed } from 'vue'
   
   const route = useRoute()
-  const mainStore = useMainStore()
 
   const tabs = [
     { route: "/customizer", name: "Customizer" },
     { route: "/planner", name: "Planner" },
     { route: "/about", name: "About" }
   ]
-  const currentTab = ref(tabs[0].route)
   const currentRoute = computed(() => route.path)
 </script>
 

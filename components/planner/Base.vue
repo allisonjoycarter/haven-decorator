@@ -13,8 +13,16 @@
 
       @contextmenu="(event) => event.preventDefault()"
     >
+      <div v-if="isLoading" class="absolute top-0 left-0 z-50 h-full w-full bg-black bg-opacity-60">
+        <div class="flex flex-col items-center mt-60 w-screen">
+          <Icon name="fa:spinner" class="animate-spin mx-auto h-12 w-12"/>
+          <p class="text-lg mt-2 ml-4">Loading...</p>
+        </div>
+      </div>
       <PlannerTools
         @selected-building="grabBuilding"
+        @selected-crafting="grabCrafting"
+        @selected-tree="grabTree"
         @selected-crop="grabCrop"
         @selected-path="grabPath"
         @update-grid-opacity="updateGridOpacity"
@@ -23,6 +31,7 @@
         @save-data-as-json="saveAsFile"
         @load-data-from-json="loadFromFile"
 
+        :is-farm="isFarm"
         :is-load-complete="isLoadComplete"
         :show-dropdown="showToolsDropdown"
         @mouseenter="() => showToolsDropdown = true"
@@ -45,11 +54,12 @@
           :width="placingWidth"
           :src="'https://assets.havendecorator.com/decorations/Planner/' + isPlacing + '.png'"/>
       </div>
-      <div class="absolute top-0 left-0 overflow-hidden" :style="fullSizeStyle">
+      <div class="absolute top-0 left-0 overflow-hidden z-30" :style="fullSizeStyle">
         <div v-show="showMouseIndicator" ref="mouseIndicator" class="absolute">
           <div class="mouse-lines-vertical"></div>
           <div class="mouse-lines-horizontal"></div>
           <div class="mouse-square"></div>
+          <div class="no-select ml-6 mt-4 bg-white bg-opacity-40 text-gray-950 px-1 rounded-sm text-sm font-bold" v-show="dragAmount.x > 0">{{ dragAmount.x }} x {{ dragAmount.y }}</div>
         </div>
       </div>
       <div>
@@ -57,7 +67,7 @@
           :style="mapBackgroundStyle + fullSizeStyle"
           ref="plannerArea"
           >
-          <div :style="mapGridBackgroundStyle + fullSizeStyle + ' opacity: ' + gridOpacity / 100">
+          <div class="z-20" :style="mapGridBackgroundStyle + fullSizeStyle + ' opacity: ' + gridOpacity / 100">
             <div :class="'planner-grid'" ref="plannerGrid" @dragstart="(event) => event.preventDefault()"></div>
           </div>
           <div>
@@ -66,7 +76,8 @@
               :key="index"
               :style="'position: absolute; top: ' + (item.yStart) + 'px; left: ' + (item.xStart) + 'px;'"
               :class="{
-                'grayscale contrast-100': collisions.includes(index)
+                'z-30': true,
+                'grayscale contrast-200': collisions.includes(index)
               }"
             >
             <img
@@ -80,19 +91,24 @@
           <div ref="tilesContainer">
           <div
             v-for="(position, index) in tileData.values()" :key="index" 
-            :class="{
-              'tile': true,
-              'highlight-square': position.isDragged,
-              'bg-white': position.isDragged && !isPlacing && !isDraggingToErase,
-              'bg-blue-700': position.isDragged && !isDraggingToErase,
-              'bg-red-500': position.isDragged && isDraggingToErase,
-            }"
             :style="'position: absolute; top: ' + (position.y - 11) + 'px; left: ' + (position.x - 11) + 'px;'"
+            class="tile"
             >
+              <div
+                :class="{
+                  'no-select z-40 absolute top-0 left-0 tile': true,
+                  'highlight-square': position.isDragged,
+                  'bg-white': position.isDragged && !isPlacing && !isDraggingToErase,
+                  'bg-blue-700': position.isDragged && !isDraggingToErase,
+                  'bg-red-500': position.isDragged && isDraggingToErase,
+                  }"
+              ></div>
               <img 
-                v-if="showImageOn(position)"
-                class="no-select"
-                :width="position.usedForWidth"
+                v-if="position.usedFor !== undefined"
+                :class="{
+                  'no-select z-20 absolute top-0 left-0 tile': true,
+                  'grayscale contrast-200': (position.isDragged && isDraggingToErase) || willBeErased.includes(`${position.x}-${position.y}`),
+                }"
                 style="max-width: unset;"
                 :src="'https://assets.havendecorator.com/decorations/Planner/' + position.usedFor + '.png'"/>
             </div>
@@ -104,12 +120,13 @@
 </template>
 
 <script lang="ts" setup>
+  import axios from 'axios';
   import { ref, onMounted, onUnmounted, computed } from 'vue'
-  import buildingSizes from '~/models/building_sizes.json'
   import type { PlacedItem } from '~/models/placed_item';
 
   const props = defineProps<{
     mapName: string,
+    isFarm: boolean,
     backgroundImage: string,
     backgroundGridImage: string,
     imageHeight: number,
@@ -119,14 +136,16 @@
     verticalTileThreshold: number,
     horizontalTileThreshold: number,
   }>()
+  const plannerStore = usePlannerStore()
 
+  const isLoading = ref(true)
   const isHoveringPlanner = ref(false)
   
   const planner = ref(null as null|HTMLElement)
   const plannerArea = ref(null as null|HTMLElement)
   const plannerGrid = ref(null as null|HTMLElement)
   const mouseIndicator = ref(null as null|HTMLElement)
-  const gridOpacity = ref(40)
+  const gridOpacity = ref(30)
   
   const originalCanvas = ref(null as null|HTMLCanvasElement)
   const savingPlaceholder = ref(null as null|HTMLElement)
@@ -134,21 +153,26 @@
   
   const marginTop = ref(0)
   const marginLeft = ref(0)
-
   
   const placeOnDragEnd = ref(undefined as string|undefined)
   const isDragging = ref(false)
   const isDraggingToErase = ref(false)
   const dragStart = ref({x: 0, y: 0})
+  const dragAmount = ref({x: 0, y: 0})
   const draggedTiles = ref([] as string[])
   const currentDragLocation = ref({x: 0, y: 0})
 
   const isPlacing = ref(undefined as string|undefined)
   const placingWidth = ref(undefined as number|undefined)
   const placingItem = ref(null as null|HTMLElement)
+  
   const collisions = ref([] as number[])
+  const willBeErased = ref([] as string[])
+
   const placingSizeX = ref(0)
   const placingSizeY = ref(0)
+  const buildingSizes = ref([] as {name: string; x: number; y: number}[])
+  const craftingTableSizes = ref([] as {name: string; x: number; y: number}[])
 
   // Main data stored here
   const tileData = ref(new Map<string, PlaceableTile>())
@@ -158,6 +182,9 @@
   const canUndo = ref(false)
   const previousTileData = ref(new Map<string, PlaceableTile>())
   const previousSubtileData = ref([] as PlacedItem[])
+
+  let saveIntervalId: undefined|NodeJS.Timeout = undefined
+  const hasPendingChanges = ref(false)
 
   const showToolsDropdown = ref(false)
 
@@ -178,30 +205,71 @@
   })
 
   onMounted(() => {
+    fetchSizes()
+
     if (plannerArea.value !== null) {
-      console.log(plannerArea.value)
       const rect = (plannerArea.value as HTMLElement).getBoundingClientRect() 
       marginTop.value = rect.y;
       marginLeft.value = rect.x;
     }
 
-    for (var x = props.gridOffsetLeft; x <= 1868; x += 24) {
-      for (var y = props.gridOffsetTop; y <= 2008; y += 24) {
+    for (var x = props.gridOffsetLeft; x <= props.imageWidth; x += 24) {
+      for (var y = props.gridOffsetTop; y <= props.imageHeight; y += 24) {
         tileData.value.set(`${x}-${y}`, {
           x: x,
           y: y,
           outOfBounds: true,
           isDragged: false,
-          isPlacementOrigin: false,
-          origin: undefined,
           usedFor: undefined,
-          usedForWidth: undefined,
         })
       }
     }
+    
+    const existingData = plannerStore.maps.find((map) => map.mapName === props.mapName)
+    console.log("Found existing:", existingData)
+    if (existingData !== undefined) {
+      Object.values(existingData.tileData).forEach((entry: any) => {
+        tileData.value.set(`${entry.x}-${entry.y}`, entry)
+      })
+      subtileData.value = existingData.subtileData
+    }
 
-    console.log("Stored data for ", tileData.value.keys.length, "tiles");
+    isLoading.value = false
+
+    // Save Progress every 1 minute
+    saveIntervalId = setInterval(() => {
+      if (hasPendingChanges.value) {
+        console.log("Saving pending changes...")
+        const data = {} as any
+        tileData.value.forEach((entry) => {
+          if (entry.usedFor !== undefined) {
+            data[`${entry.x}-${entry.y}`] = entry
+          }
+        })
+        plannerStore.setTileData({ map: props.mapName, tileData: data })
+        plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value })
+        hasPendingChanges.value = false
+      } else {
+        console.log("Nothing to save.")
+      }
+    }, 30000)
   })
+
+  onUnmounted(() => {
+    if (saveIntervalId !== undefined) {
+      clearInterval(saveIntervalId)
+    }
+  })
+
+  function fetchSizes() {
+    axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/sizes.json').then((result) => {
+      buildingSizes.value = result.data.sizes
+    })
+
+    axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/sizes.json').then((result) => {
+      craftingTableSizes.value = result.data.sizes
+    })
+  }
 
   function saveAsImage() {
     const link = (savingPlaceholder.value as any)
@@ -296,17 +364,14 @@
     const fr = new FileReader();
 
     fr.onload = (e: any) => {
-      for (var x = props.gridOffsetLeft; x <= 1868; x += 24) {
-        for (var y = props.gridOffsetTop; y <= 2008; y += 24) {
+      for (var x = props.gridOffsetLeft; x <= props.imageWidth; x += 24) {
+        for (var y = props.gridOffsetTop; y <= props.imageHeight; y += 24) {
           tileData.value.set(`${x}-${y}`, {
             x: x,
             y: y,
             outOfBounds: false,
             isDragged: false,
-            isPlacementOrigin: false,
-            origin: undefined,
             usedFor: undefined,
-            usedForWidth: undefined,
           })
         }
       }
@@ -320,6 +385,7 @@
     }
     fr.readAsText(files.item(0))
     isLoadComplete.value = true
+    hasPendingChanges.value = true
   }
 
   function updateGridOpacity(opacity: number) {
@@ -330,10 +396,12 @@
     if (event.buttons === 1) {
       if (isPlacing.value === undefined || placeOnDragEnd.value !== undefined) {
         isDragging.value = true
-        // console.log("Begin drag", event)
+        handleMouseOverMap(event)
       } else {
         // Store for undo
         canUndo.value = true
+        hasPendingChanges.value = true
+
         previousTileData.value = new Map()
         previousSubtileData.value = subtileData.value.map((item) => item)
 
@@ -370,15 +438,12 @@
             isDragged: false,
             outOfBounds: true,
             usedFor: tile.usedFor,
-            usedForWidth: tile.usedForWidth,
-            origin: tile.origin,
-            isPlacementOrigin: tile.isPlacementOrigin
           })
           
           tile.usedFor = placeOnDragEnd.value
-          tile.usedForWidth = undefined
-          tile.origin = undefined
-          tile.isPlacementOrigin = true
+          subtileData.value = subtileData.value.filter((subtile) => 
+            !subtile.coversTiles.includes(`${tile.x}-${tile.y}`)
+          )
         }
       }) 
     }
@@ -397,15 +462,9 @@
             isDragged: false,
             outOfBounds: true,
             usedFor: tile.usedFor,
-            usedForWidth: tile.usedForWidth,
-            origin: tile.origin,
-            isPlacementOrigin: tile.isPlacementOrigin
           })
           
           tile.usedFor = undefined
-          tile.usedForWidth = undefined
-          tile.origin = undefined
-          tile.isPlacementOrigin = false
           
           subtileData.value = subtileData.value.filter((subtile) => 
             !subtile.coversTiles.includes(`${tile.x}-${tile.y}`)
@@ -421,9 +480,11 @@
       //   }
       // }
 
+      hasPendingChanges.value = true
       collisions.value = []
     }
     
+    dragAmount.value = { x: 0, y: 0 }
     isDraggingToErase.value = false
     tileData.value.forEach((tile) => tile.isDragged = false)
   }
@@ -442,7 +503,7 @@
 
       let pos = {x: leftWithMargin, y: topWithMargin};
 
-      if (pos.x < 1868 && pos.y < 2008) {
+      if (pos.x < props.imageWidth && pos.y < props.imageHeight) {
         if (placeOnDragEnd.value === undefined) {
           pos = getSubtilePositionAt(leftWithMargin, topWithMargin)
   
@@ -456,6 +517,9 @@
               collisions.value.push(i)
             }
           }
+
+          willBeErased.value = findCoveredTiles(pos.x, size.bottom)
+
           item.setAttribute("style", `left: ${pos.x}px; top: ${pos.y}px;`)
         } else {
           // Offset a bit so we don't grab the image instead of clicking the map
@@ -502,8 +566,14 @@
         const inDrag = [`${dragStart.value.x}-${dragStart.value.y}`];
         const previouslyDragged = draggedTiles.value
 
+        let draggedX = 0
+        let draggedY = 0
         for (var x = leftX; x <= rightX; x += 24) {
+          draggedX++
           for (var y = topY; y <= bottomY; y += 24) {
+            if (x === leftX) {
+              draggedY++
+            }
             inDrag.push(`${x}-${y}`)
           }
         }
@@ -520,6 +590,8 @@
             }
           })
         }
+
+        dragAmount.value = { x: draggedX, y: draggedY }
         draggedTiles.value = inDrag
     }
   }
@@ -539,10 +611,54 @@
   function grabBuilding(name: string) {
     isPlacing.value = 'Buildings/' + name
 
-    placingSizeX.value = (buildingSizes as any)[name]['x']
-    placingSizeY.value = (buildingSizes as any)[name]['y']
+    buildingSizes.value.forEach((building) => {
+      console.log(building.name, name, building.name === name)
+    })
+    
+    const size = buildingSizes.value.find((building) => building.name.trim() === name.trim())
+    placingSizeX.value = size?.x ?? 12
+    placingSizeY.value = size?.y ?? 12
+    
+    placingWidth.value = (placingSizeX.value / 6) * 24
+  }
+
+  function grabCrafting(name: string) {
+    isPlacing.value = 'Crafting/' + name
+
+    const size = craftingTableSizes.value.find((table) => table.name.trim() === name.trim())
+    placingSizeX.value = size?.x ?? 12
+    placingSizeY.value = size?.y ?? 12
+    
+    placingWidth.value = (placingSizeX.value / 6) * 24
+  }
+
+  function grabTree(name: string) {
+    isPlacing.value = 'Trees/' + name
+
+    placingSizeX.value = 12
+    placingSizeY.value = 6
 
     placingWidth.value = (placingSizeX.value / 6) * 24
+  }
+
+  function findCoveredTiles(subtileX: number, imageBottom: number) {
+    const tileX = Math.round(subtileX / 24) * 24 + props.gridOffsetLeft
+    const position = getTilePositionAt(tileX, imageBottom - marginTop.value)
+    
+    const tileWidth = Math.ceil(placingSizeX.value / 6)
+    const tileHeight = Math.ceil(placingSizeY.value / 6)
+
+    console.log(position, 'width', tileWidth, 'height', tileHeight)
+
+    const coveredTiles = []
+    for (let x = position.x; x < position.x + (tileWidth*24); x+=24) {
+      for (let y = position.y - (tileHeight*24) + 24; y < position.y + 24; y+=24) {
+        if (tileData.value.has(`${x}-${y}`)) {
+          coveredTiles.push(`${x}-${y}`)
+        }
+      }
+    }
+    return coveredTiles
   }
 
   function placeBuilding(event: MouseEvent) {
@@ -564,25 +680,10 @@
       coversTiles: [] as string[]
     }
     
-    const tileX = Math.round(subtilePosition.x / 24) * 24 + props.gridOffsetLeft
-    const position = getTilePositionAt(tileX, size.bottom - marginTop.value)
-    
-    const tileWidth = Math.ceil(placingSizeX.value / 6)
-    const tileHeight = Math.ceil(placingSizeY.value / 6)
-
-    console.log(position, 'width', tileWidth, 'height', tileHeight)
-
-    const coveredTiles = []
-    for (let x = position.x; x < position.x + (tileWidth*24); x+=24) {
-      for (let y = position.y - (tileHeight*24) + 24; y < position.y + 24; y+=24) {
-        if (tileData.value.has(`${x}-${y}`)) {
-          coveredTiles.push(`${x}-${y}`)
-          tileData.value.get(`${x}-${y}`)!.usedFor = undefined
-          tileData.value.get(`${x}-${y}`)!.usedForWidth = undefined
-        }
-      }
-    }
-    subtile.coversTiles = coveredTiles
+    subtile.coversTiles = findCoveredTiles(subtilePosition.x, size.bottom)
+    subtile.coversTiles.forEach((tileKey) => {
+      tileData.value.get(tileKey)!.usedFor = undefined
+    })
 
     subtileData.value.push(subtile)
 
@@ -609,10 +710,6 @@
     }
   }
 
-  function showImageOn(tile: PlaceableTile) {
-    return tile.isPlacementOrigin && tile.usedFor !== undefined
-  }
-
   function undo() {
     console.log("reverting to", previousSubtileData.value, previousTileData.value)
     subtileData.value = previousSubtileData.value
@@ -624,12 +721,11 @@
     canUndo.value = false
     previousSubtileData.value = []
     previousTileData.value = new Map()
+    hasPendingChanges.value = true
   } 
 
   function handleKeyPress(event: KeyboardEvent) {
-    console.log(event)
     if (event.ctrlKey && event.key == 'z') {
-      console.log("Undoing")
       if (canUndo.value) {
         undo()
       }
@@ -650,24 +746,6 @@
 </script>
 
 <style scoped>
-
-/* 
-Each Map needs the following css:
-
-.planner-area {
-  background: url("https://assets.havendecorator.com/decorations/sun_haven_farm_smaller.png") left top transparent;
-  height: 2008px;
-  width: 1868px; 
-}
-.planner-grid {
-  background: url("https://assets.havendecorator.com/decorations/sun_haven_farm_smaller_grid.png") left top transparent;
-  height: 2008px;
-}
-.full-size {
-  height: 2008px;
-  width: 1868px;
-}
-*/
 
 .mouse-lines-horizontal {
   border-top: 2px solid white;

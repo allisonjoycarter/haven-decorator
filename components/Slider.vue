@@ -6,7 +6,7 @@
       :max="max ?? 100"
       :step="step ?? 10"
       v-model="sliderValue"
-      class="slider h-4 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-white hover:dark:bg-gray-600"
+      class="slider h-4 bg-gray-300 dark:bg-gray-700 rounded-md hover hover:bg-gray-400 hover:dark:bg-gray-600"
       ref="slider"
       @input="onSliderChanged"
     />
@@ -33,35 +33,49 @@
 <style scoped>
 
 .slider {
-  -webkit-appearance: none;
-  appearance: none;
-  outline: none;
-  opacity: 0.7;
-  height: 10px;
-  -webkit-transition: .2s;
-  transition: opacity .2s;
-}
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    opacity: 0.7;
+    height: 10px;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; 
+    height: 15px;
+    background: #3730a3;
+    cursor: pointer;
+    border: none;
+    border: 3px solid #3730a3;
+    border-radius: 15px;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 15px; 
+    height: 15px;
+    background: #3730a3;
+    cursor: pointer;
+    border: none;
+    border: 3px solid #3730a3;
+    border-radius: 15px;
+  }
 
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 15px; 
-  height: 15px;
-  background: #818cf8;
-  cursor: pointer;
-  border: none;
-  border: 3px solid #818cf8;
-  border-radius: 15px;
-}
+@media (prefers-color-scheme: dark) {
+  
+  .slider::-webkit-slider-thumb {
+    background: #818cf8;
+    border: 3px solid #818cf8;
+  }
+  
+  .slider::-moz-range-thumb {
+    background: #818cf8;
+    border: 3px solid #818cf8;
+  }
 
-.slider::-moz-range-thumb {
-  width: 15px; 
-  height: 15px;
-  background: #818cf8;
-  cursor: pointer;
-  border: none;
-  border: 3px solid #818cf8;
-  border-radius: 15px;
 }
 
 </style>

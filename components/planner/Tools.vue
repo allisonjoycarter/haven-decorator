@@ -1,5 +1,9 @@
 <template>
-  <div class="absolute m-4 top-0 left-0 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4 w-60">
+  <div
+    class="absolute m-4 top-0 left-0 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4"
+    @mouseenter="(event) => event.stopPropagation()"  
+    @mouseover="(event) => event.stopPropagation()"  
+  >
     <div class="flex flex-col">
       <p>left click drag to place</p>
       <p>right click drag to erase</p>
@@ -19,7 +23,7 @@
         'max-h-0': !showMoreOptions,
         'max-h-64': showMoreOptions
       }">
-        <hr class="opacity-40 my-2"/>
+        <hr class="border-gray-400 opacity-80 dark:opacity-40 my-2"/>
         <div class="flex flex-row gap-4 my-2">
           <button class="btn-primary" @click="openSaveModal"><Icon name="fa:download"/>&nbsp;Save</button>
           <button class="btn-primary" @click="openLoadModal"><Icon name="fa:upload"/>&nbsp;Load</button>
@@ -31,25 +35,18 @@
           @slider-changed="updateGridOpacity"
         />
       </div>
-      <hr class="opacity-40 my-2"/>
-      <div class="flex flex-row gap-1">
+      <hr class="border-gray-400 opacity-80 dark:opacity-40 my-2"/>
+      <div class="flex flex-row border border-indigo-500 rounded-md my-1 justify-between">
         <button
-          class="btn-text"
-          @click="() => openDropdown === 'Building' ? openDropdown = '' : openDropdown = 'Building'"
+          v-for="item in dropdowns"
+          :class="{
+            'btn-text px-2 rounded-sm': true,
+            'font-semibold bg-indigo-500 text-gray-200': openDropdown === item && showDropdown
+          }"
+          @mouseenter="() => openDropdown = item"
+          @click="() => openDropdown = item"
         >
-          Buildings
-        </button>
-        <button
-          class="btn-text"
-          @click="() => openDropdown === 'Crop' ? openDropdown = '' : openDropdown = 'Crop'"
-        >
-          Crops
-        </button>
-        <button
-          class="btn-text"
-          @click="() => openDropdown === 'Path' ? openDropdown = '' : openDropdown = 'Path'"
-        >
-          Paths
+          {{ item }}s
         </button>
       </div>
       <Autocomplete
@@ -68,6 +65,18 @@
         v-show="openDropdown === 'Path' && showDropdown"
         :options="pathOptions"
         placeholder="Search Paths"
+        @selected="selected"
+      />
+      <Autocomplete
+        v-show="openDropdown === 'Tree' && showDropdown"
+        :options="treeOptions"
+        placeholder="Search Trees"
+        @selected="selected"
+      />
+      <Autocomplete
+        v-show="openDropdown === 'Crafting Table' && showDropdown"
+        :options="craftingTableOptions"
+        placeholder="Search Crafting"
         @selected="selected"
       />
       
@@ -101,15 +110,19 @@
 
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue'
+  import axios from 'axios'
 
   const props = defineProps<{
     showDropdown: boolean,
-    isLoadComplete: boolean
+    isLoadComplete: boolean,
+    isFarm?: boolean,
   }>()
   const emit = defineEmits([
     'selectedCrop',
     'selectedBuilding',
     'selectedPath',
+    'selectedCrafting',
+    'selectedTree',
     'updateGridOpacity',
     'openSaveModal',
     'saveImage',
@@ -121,38 +134,21 @@
   const isSaveModalOpen = ref(false)
   const isLoadModalOpen = ref(false)
   const isCurrentLoadComplete = ref(false)
-  const savedImage = ref(null as null|HTMLElement)
 
-  const buildings = ['House', 'Crafting Table']
-  const crops = [
-    'Armoranth',
-    'Beet',
-    'Brr-Nana',
-    'Coffee Bean',
-    'Corn',
-    'Clover',
-    'Garlic',
-    'Kale',
-    'Purple Eggplant',
-    'Sugar Cane',
-  ]
+  const farmDropdowns = ['Building', 'Crop', 'Path', 'Crafting Table', 'Tree']
+  const buildingDropdowns = ['Crafting Table']
+  const buildings = ref([] as string[])
+  const crops = ref([] as string[])
+  const craftingTables = ref([] as string[])
+  const trees = ref([] as string[])
   const paths = ['Workshop']
 
   const openDropdown = ref('')
 
-  function selected(option: string) {
-    if (crops.includes(option)) {
-      emit('selectedCrop', option)
-    } else if (buildings.includes(option)) {
-      emit('selectedBuilding', option)
-    } else if (paths.includes(option)) {
-      emit('selectedPath', option)
-    }
-    openDropdown.value = ''
-  }
+  const dropdowns = computed(() => props.isFarm ? farmDropdowns : buildingDropdowns)
 
   const buildingOptions = computed(() => {
-    return buildings.map((building) => {
+    return buildings.value.map((building) => {
       return {
         name: building,
         image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/' + building + '.png'
@@ -161,10 +157,19 @@
   })
 
   const cropOptions = computed(() => {
-    return crops.map((crop) => {
+    return crops.value.map((crop) => {
       return {
         name: crop,
         image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crops/' + crop + '.png'
+      }
+    })
+  })
+
+  const craftingTableOptions = computed(() => {
+    return craftingTables.value.map((path) => {
+      return {
+        name: path,
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/' + path + '.png'
       }
     })
   })
@@ -178,9 +183,51 @@
     })
   })
 
+  const treeOptions = computed(() => {
+    return trees.value.map((path) => {
+      return {
+        name: path,
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Trees/' + path + '.png'
+      }
+    })
+  })
+
   const canShowLoadModal = computed(() => {
     return !props.isLoadComplete || !isCurrentLoadComplete.value
   })
+
+  onMounted(() => {
+    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crops/list.txt").then((result) => {
+      crops.value = result.data.split('\n')
+    })
+
+    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/list.txt").then((result) => {
+      buildings.value = result.data.split('\n')
+    })
+
+    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/list.txt").then((result) => {
+      craftingTables.value = result.data.split('\n')
+    })
+
+    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Trees/list.txt").then((result) => {
+      trees.value = result.data.split('\n')
+    })
+  })
+  
+  function selected(option: string) {
+    if (crops.value.includes(option)) {
+      emit('selectedCrop', option)
+    } else if (buildings.value.includes(option)) {
+      emit('selectedBuilding', option)
+    } else if (paths.includes(option)) {
+      emit('selectedPath', option)
+    } else if (craftingTables.value.includes(option)) {
+      emit('selectedCrafting', option)
+    } else if (trees.value.includes(option)) {
+      emit('selectedTree', option)
+    }
+    openDropdown.value = ''
+  }
 
   function updateGridOpacity(opacity: number) {
     emit('updateGridOpacity', opacity)

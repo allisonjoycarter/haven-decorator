@@ -12,7 +12,7 @@
   }
 
   .btn-text {
-    @apply py-2 font-semibold text-indigo-900 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-400 hover:bg-indigo-700 hover:bg-opacity-30;
+    @apply py-2 font-semibold text-indigo-700 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-500 hover:bg-indigo-700 hover:bg-opacity-30;
   }
 
   .btn-text-secondary {
@@ -20,7 +20,7 @@
   }
 
   .elevated-card {
-    @apply bg-gray-200 dark:bg-gray-800 p-4 rounded-lg drop-shadow-lg;
+    @apply bg-gray-200 border border-gray-300 dark:border-0 dark:bg-gray-800 p-4 rounded-lg drop-shadow-lg;
   }
 }
 
