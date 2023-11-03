@@ -30,6 +30,7 @@
         @save-image="saveAsImage"
         @save-data-as-json="saveAsFile"
         @load-data-from-json="loadFromFile"
+        @start-over="resetData"
 
         :is-farm="isFarm"
         :is-load-complete="isLoadComplete"
@@ -48,7 +49,8 @@
           ref="placingItem"
         >
         <img
-          :width="placingWidth"
+          :style="'max-width: unset;'"
+          :width="placingImageWidth"
           :src="'https://assets.havendecorator.com/decorations/Planner/' + isPlacing + '.png'"/>
       </div>
       <div class="absolute top-0 left-0 overflow-hidden z-30" :style="fullSizeStyle">
@@ -78,9 +80,8 @@
               }"
             >
             <img
-                :width="item.xEnd - item.xStart"
-                :height="item.yEnd - item.yStart"
-                style="max-width: unset;"
+                :width="item.visibleWidth"
+                :style="'max-width: unset;'"
                 class="no-select"
                 :src="'https://assets.havendecorator.com/decorations/Planner/' + item.itemName + '.png'"/>
             </div>
@@ -119,6 +120,7 @@
 <script lang="ts" setup>
   import axios from 'axios';
   import { ref, onMounted, onUnmounted, computed } from 'vue'
+  import type PlaceableItem from '~/models/placeable_item';
   import type { PlacedItem } from '~/models/placed_item';
 
   const props = defineProps<{
@@ -160,16 +162,14 @@
   const currentDragLocation = ref({x: 0, y: 0})
 
   const isPlacing = ref(undefined as string|undefined)
-  const placingWidth = ref(undefined as number|undefined)
   const placingItem = ref(null as null|HTMLElement)
+  const placingDimensions = ref(undefined as PlaceableItem|undefined)
   
   const subtilesWillBeErased = ref([] as string[])
   const willBeErased = ref([] as string[])
 
-  const placingSizeX = ref(0)
-  const placingSizeY = ref(0)
-  const buildingSizes = ref([] as {name: string; x: number; y: number}[])
-  const craftingTableSizes = ref([] as {name: string; x: number; y: number}[])
+  const buildingSizes = ref([] as PlaceableItem[])
+  const craftingTableSizes = ref([] as PlaceableItem[])
 
   // Main data stored here
   const tileData = ref(new Map<string, PlaceableTile>())
@@ -199,6 +199,10 @@
     return `background: url("${props.backgroundGridImage}") left top transparent;`
   })
 
+  const placingImageWidth = computed(() => {
+    return placingDimensions.value === undefined ? undefined : (placingDimensions.value.visible_x * 4)
+  })
+
   onMounted(() => {
     fetchSizes()
 
@@ -222,7 +226,6 @@
     
     // TODO: validate this format
     const existingData = plannerStore.maps.find((map) => map.mapName === props.mapName)
-    console.log("Found existing:", existingData)
     if (existingData !== undefined) {
       Object.values(existingData.tileData).forEach((entry: any) => {
         tileData.value.set(`${entry.x}-${entry.y}`, entry)
@@ -235,7 +238,6 @@
     // Save Progress every 1 minute
     saveIntervalId = setInterval(() => {
       if (hasPendingChanges.value) {
-        console.log("Saving pending changes...")
         const data = {} as any
         tileData.value.forEach((entry) => {
           if (entry.usedFor !== undefined) {
@@ -258,11 +260,11 @@
   })
 
   function fetchSizes() {
-    axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/sizes.json').then((result) => {
+    axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/building_sizes.json').then((result) => {
       buildingSizes.value = result.data.sizes
     })
 
-    axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/sizes.json').then((result) => {
+    axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/crafting_table_sizes.json').then((result) => {
       craftingTableSizes.value = result.data.sizes
     })
   }
@@ -286,8 +288,6 @@
         data.tileData[`${entry.x}-${entry.y}`] = entry
       }
     })
-
-    console.log(data)
 
     var file = new Blob([JSON.stringify(data, null, 2)], {
       type: "application/json",
@@ -326,7 +326,6 @@
         const decoImage = new Image()
         decoImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + item.itemName + '.png'
         decoImage.onload = function() {
-          console.log("drawing subtile item", item.itemName)
           context.drawImage(
             decoImage,
             // x, y to draw at
@@ -342,7 +341,6 @@
           const itemImage = new Image()
           itemImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + tile.usedFor + '.png'
           itemImage.onload = function() {
-            console.log("drawing tile", tile.usedFor)
             context.drawImage(itemImage, tile.x - 11, tile.y - 11)
           }
         }
@@ -485,10 +483,11 @@
   function handleMouseOverMap(event: MouseEvent) {
     if (isPlacing.value !== undefined) {
       const item = (placingItem.value as HTMLElement)
-      const size = item.getBoundingClientRect()
+      const xPixels = placingDimensions.value!!.visible_x * 4
+      const yPixels = placingDimensions.value!!.visible_y * 4
 
-      const topWithMargin = event.pageY - marginTop.value - (size.width / 2);
-      const leftWithMargin = event.pageX - marginLeft.value - (size.height / 2);
+      const topWithMargin = event.pageY - marginTop.value - (xPixels / 2);
+      const leftWithMargin = event.pageX - marginLeft.value - (yPixels / 2);
 
       let pos = {x: leftWithMargin, y: topWithMargin};
 
@@ -498,14 +497,15 @@
 
           subtilesWillBeErased.value = []
           for (let i = 0; i < subtileData.value.length; i++) {
-            if (subtileData.value[i].xStart <= (pos.x + (placingSizeX.value * 4))
+            if (subtileData.value[i].xStart <= (pos.x + (placingDimensions.value!!.placement_x * 4))
               && subtileData.value[i].xEnd >= pos.x
-              && subtileData.value[i].yStart <= (pos.y + (placingSizeY.value * 4))
+              && subtileData.value[i].yStart <= (pos.y + (placingDimensions.value!!.placement_y * 4))
               && subtileData.value[i].yEnd >= pos.y
               ) {
               subtilesWillBeErased.value.push(subtileData.value[i].id)
             }
           }
+          const size = (placingItem.value as HTMLElement).getBoundingClientRect()
           willBeErased.value = findCoveredTiles(pos.x, size.bottom)
 
           item.setAttribute("style", `left: ${pos.x}px; top: ${pos.y}px;`)
@@ -593,59 +593,74 @@
     }
   }
 
-  function grabCrop(crop: String) {
+  function grabCrop(crop: string) {
     isPlacing.value = 'Crops/' + crop
     placeOnDragEnd.value = 'Crops/' + crop
-    placingWidth.value = 24
+    placingDimensions.value = {
+      name: crop,
+      placement_x: 6,
+      placement_y: 6,
+      visible_x: 6,
+      visible_y: 6,
+    }
   }
 
-  function grabPath(path: String) {
+  function grabPath(path: string) {
     isPlacing.value = 'Paths/' + path
     placeOnDragEnd.value = 'Paths/' + path
-    placingWidth.value = 24
+    placingDimensions.value = {
+      name: path,
+      placement_x: 6,
+      placement_y: 6,
+      visible_x: 6,
+      visible_y: 6,
+    }
   }
 
   function grabBuilding(name: string) {
     isPlacing.value = 'Buildings/' + name
 
-    buildingSizes.value.forEach((building) => {
-    })
-    
     const size = buildingSizes.value.find((building) => building.name.toLowerCase().trim() === name.toLowerCase().trim())
-    console.log(name.toLowerCase().trim(), size?.x, size?.y)
-    placingSizeX.value = size?.x ?? 12
-    placingSizeY.value = size?.y ?? 12
-    
-    placingWidth.value = (placingSizeX.value / 6) * 24
+    placingDimensions.value = size ?? {
+      name: name,
+      visible_x: 12,
+      visible_y: 12,
+      placement_x: 12,
+      placement_y: 12
+    }
   }
 
   function grabCrafting(name: string) {
     isPlacing.value = 'Crafting/' + name
 
     const size = craftingTableSizes.value.find((table) => table.name.toLowerCase().trim() === name.toLowerCase().trim())
-    placingSizeX.value = size?.x ?? 12
-    placingSizeY.value = size?.y ?? 12
-    
-    placingWidth.value = (placingSizeX.value / 6) * 24
+    placingDimensions.value = size ?? {
+      name: name,
+      visible_x: 12,
+      visible_y: 12,
+      placement_x: 12,
+      placement_y: 12
+    }
   }
 
   function grabTree(name: string) {
     isPlacing.value = 'Trees/' + name
 
-    placingSizeX.value = 12
-    placingSizeY.value = 6
-
-    placingWidth.value = (placingSizeX.value / 6) * 24
+    placingDimensions.value = {
+      name: name,
+      visible_x: 12,
+      visible_y: 17,
+      placement_x: 12,
+      placement_y: 6
+    }
   }
 
   function findCoveredTiles(subtileX: number, imageBottom: number) {
     const tileX = Math.round(subtileX / 24) * 24 + props.gridOffsetLeft
     const position = getTilePositionAt(tileX, imageBottom - marginTop.value)
     
-    const tileWidth = Math.ceil(placingSizeX.value / 6)
-    const tileHeight = Math.ceil(placingSizeY.value / 6)
-
-    console.log(position, 'width', tileWidth, 'height', tileHeight)
+    const tileWidth = Math.ceil(placingDimensions.value!!.placement_x / 6)
+    const tileHeight = Math.ceil(placingDimensions.value!!.placement_y / 6)
 
     const coveredTiles = []
     for (let x = position.x; x < position.x + (tileWidth*24); x+=24) {
@@ -659,27 +674,30 @@
   }
 
   function placeBuilding(event: MouseEvent) {
-    const size = (placingItem.value as HTMLElement).getBoundingClientRect()
+    const dimensions = placingDimensions.value!!
+    const xPixels = dimensions.visible_x * 4
+    const yPixels = dimensions.visible_y * 4
 
-    const topWithMargin = event.pageY - marginTop.value - (size.width / 2);
-    const leftWithMargin = event.pageX - marginLeft.value - (size.height / 2);
+    const topWithMargin = event.pageY - marginTop.value - (xPixels / 2);
+    const leftWithMargin = event.pageX - marginLeft.value - (yPixels / 2);
 
     const subtilePosition = getSubtilePositionAt(leftWithMargin, topWithMargin)
 
     let subtile = {
       id: `${isPlacing.value}-${subtilePosition.x}-${subtilePosition.y}`,
       xStart: subtilePosition.x,
-      xEnd: subtilePosition.x + (placingSizeX.value * 4),
+      xEnd: subtilePosition.x + (dimensions.placement_x * 4),
       yStart: subtilePosition.y,
-      yEnd: subtilePosition.y + (placingSizeY.value * 4),
-      visibleWidth: size.width,
-      visibleHeight: size.height,
-      collidableWidth: size.width,
-      collidableHeight: size.height,
+      yEnd: subtilePosition.y + (dimensions.placement_y * 4),
+      visibleWidth: dimensions.visible_x * 4,
+      visibleHeight: dimensions.visible_y * 4,
+      collidableWidth: dimensions.placement_x * 4,
+      collidableHeight: dimensions.placement_y * 4,
       itemName: isPlacing.value!,
       coversTiles: [] as string[]
     }
-    
+
+    const size = (placingItem.value as HTMLElement).getBoundingClientRect()
     subtile.coversTiles = findCoveredTiles(subtilePosition.x, size.bottom)
     subtile.coversTiles.forEach((tileKey) => {
       tileData.value.get(tileKey)!.usedFor = undefined
@@ -744,6 +762,22 @@
     isHoveringPlanner.value = false;
     (planner.value as HTMLElement).blur();
     handleDragEnd()
+  }
+
+  function resetData() {
+    for (var x = props.gridOffsetLeft; x <= props.imageWidth; x += 24) {
+      for (var y = props.gridOffsetTop; y <= props.imageHeight; y += 24) {
+        tileData.value.set(`${x}-${y}`, {
+          x: x,
+          y: y,
+          outOfBounds: true,
+          isDragged: false,
+          usedFor: undefined,
+        })
+      }
+    }
+    subtileData.value = []
+    hasPendingChanges.value = true
   }
 
 </script>

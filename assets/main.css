@@ -11,6 +11,10 @@
     @apply py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md transition-all ease-in duration-200 hover:bg-indigo-400;
   }
 
+  .btn-danger {
+    @apply py-2 px-4 bg-red-800 text-white font-semibold rounded-lg shadow-md transition-all ease-in duration-200 hover:bg-red-600;
+  }
+
   .btn-text {
     @apply py-2 font-semibold text-indigo-700 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-500 hover:bg-indigo-700 hover:bg-opacity-30;
   }

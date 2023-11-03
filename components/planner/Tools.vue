@@ -27,6 +27,7 @@
         <div class="flex flex-row gap-4 my-2">
           <button class="btn-primary" @click="openSaveModal"><Icon name="fa:download"/>&nbsp;Save</button>
           <button class="btn-primary" @click="openLoadModal"><Icon name="fa:upload"/>&nbsp;Load</button>
+          <button class="btn-danger" @click="startOver"><Icon name="fa:trash"/>&nbsp;Reset</button>
         </div>
         <label class="text-xs">Grid Opacity</label>
         <Slider
@@ -140,7 +141,8 @@
     'openSaveModal',
     'saveImage',
     'saveDataAsJson',
-    'loadDataFromJson'
+    'loadDataFromJson',
+    'startOver'
   ])
   
   const showMoreOptions = ref(false)
@@ -258,6 +260,10 @@
   function openLoadModal() {
     isLoadModalOpen.value = true
     isCurrentLoadComplete.value = false
+  }
+
+  function startOver() {
+    emit('startOver')
   }
 
   function saveAsImage() {
