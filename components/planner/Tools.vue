@@ -1,11 +1,11 @@
 <template>
   <div
-    class="absolute m-4 top-0 left-0 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4"
-    @mouseenter="(event) => event.stopPropagation()"  
-    @mouseover="(event) => event.stopPropagation()"  
+    class="fixed m-4 md:top-0 md:right-0 mobile:top-36 mobile:left-4 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4 drop-shadow-lg border border-gray-300 dark:border-gray-700"
+    @mouseenter="(event) => event.stopPropagation()" 
+    @mouseover="(event) => event.stopPropagation()"
   >
     <div class="flex flex-col">
-      <p>left click drag to place</p>
+      <p>left click drag to measure & place</p>
       <p>right click drag to erase</p>
       <p>ctrl+z to undo</p>
       <button 
@@ -40,42 +40,56 @@
         <button
           v-for="item in dropdowns"
           :class="{
-            'btn-text px-2 rounded-sm': true,
-            'font-semibold bg-indigo-500 text-gray-200': openDropdown === item && showDropdown
+            'btn-text px-2': true,
+            'active': openDropdown === item,
           }"
-          @mouseenter="() => openDropdown = item"
-          @click="() => openDropdown = item"
+          @click="() => openDropdown === item ? openDropdown = '' : openDropdown = item"
         >
           {{ item }}s
         </button>
       </div>
       <Autocomplete
-        v-show="openDropdown === 'Building' && showDropdown"
+        v-show="openDropdown === 'Building'"
+        category="Buildings"
         :options="buildingOptions"
-        placeholder="Search Buildings" 
+        :preview-options="buildingOptions.slice(0, 5)"
+        :has-more-options="true"
+        placeholder="Search Buildings"
         @selected="selected"
-      />
+      >
+      </Autocomplete>
       <Autocomplete
-        v-show="openDropdown === 'Crop' && showDropdown"
+        v-show="openDropdown === 'Crop'"
+        category="Crops"
         :options="cropOptions"
+        :preview-options="cropOptions.slice(0, 5)"
+        :has-more-options="true"
         placeholder="Search Crops"
         @selected="selected"
       />
       <Autocomplete
-        v-show="openDropdown === 'Path' && showDropdown"
+        v-show="openDropdown === 'Path'"
+        category="Paths"
         :options="pathOptions"
+        :has-more-options="true"
         placeholder="Search Paths"
         @selected="selected"
       />
       <Autocomplete
-        v-show="openDropdown === 'Tree' && showDropdown"
+        v-show="openDropdown === 'Tree'"
+        category="Trees"
         :options="treeOptions"
+        :preview-options="treeOptions.slice(0, 5)"
+        :has-more-options="true"
         placeholder="Search Trees"
         @selected="selected"
       />
       <Autocomplete
-        v-show="openDropdown === 'Crafting Table' && showDropdown"
+        v-show="openDropdown === 'Crafting Table'"
+        category="Crafting Tables"
         :options="craftingTableOptions"
+        :preview-options="craftingTableOptions.slice(0, 5)"
+        :has-more-options="true"
         placeholder="Search Crafting"
         @selected="selected"
       />
@@ -113,7 +127,6 @@
   import axios from 'axios'
 
   const props = defineProps<{
-    showDropdown: boolean,
     isLoadComplete: boolean,
     isFarm?: boolean,
   }>()
@@ -134,6 +147,10 @@
   const isSaveModalOpen = ref(false)
   const isLoadModalOpen = ref(false)
   const isCurrentLoadComplete = ref(false)
+
+  // TODO
+  // const filterPills = ['Sun Haven', 'Nel\'Vari', 'Withergate']
+  // const filter = ref('')
 
   const farmDropdowns = ['Building', 'Crop', 'Path', 'Crafting Table', 'Tree']
   const buildingDropdowns = ['Crafting Table']
@@ -198,19 +215,19 @@
 
   onMounted(() => {
     axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crops/list.txt").then((result) => {
-      crops.value = result.data.split('\n')
+      crops.value = result.data.split('\n').map((name: string) => name.trim())
     })
 
     axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/list.txt").then((result) => {
-      buildings.value = result.data.split('\n')
+      buildings.value = result.data.split('\n').map((name: string) => name.trim())
     })
 
     axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/list.txt").then((result) => {
-      craftingTables.value = result.data.split('\n')
+      craftingTables.value = result.data.split('\n').map((name: string) => name.trim())
     })
 
     axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Trees/list.txt").then((result) => {
-      trees.value = result.data.split('\n')
+      trees.value = result.data.split('\n').map((name: string) => name.trim())
     })
   })
   

@@ -33,9 +33,6 @@
 
         :is-farm="isFarm"
         :is-load-complete="isLoadComplete"
-        :show-dropdown="showToolsDropdown"
-        @mouseenter="() => showToolsDropdown = true"
-        @mouseleave="() => showToolsDropdown = false"
         @contextmenu="(event: any) => event.stopPropagation()"
       >
         <div style="height: 600px" class="overflow-scroll">
@@ -77,7 +74,7 @@
               :style="'position: absolute; top: ' + (item.yStart) + 'px; left: ' + (item.xStart) + 'px;'"
               :class="{
                 'z-30': true,
-                'grayscale contrast-200': collisions.includes(index)
+                'grayscale contrast-200': subtilesWillBeErased.includes(item.id)
               }"
             >
             <img
@@ -145,7 +142,7 @@
   const plannerArea = ref(null as null|HTMLElement)
   const plannerGrid = ref(null as null|HTMLElement)
   const mouseIndicator = ref(null as null|HTMLElement)
-  const gridOpacity = ref(30)
+  const gridOpacity = ref(20)
   
   const originalCanvas = ref(null as null|HTMLCanvasElement)
   const savingPlaceholder = ref(null as null|HTMLElement)
@@ -166,7 +163,7 @@
   const placingWidth = ref(undefined as number|undefined)
   const placingItem = ref(null as null|HTMLElement)
   
-  const collisions = ref([] as number[])
+  const subtilesWillBeErased = ref([] as string[])
   const willBeErased = ref([] as string[])
 
   const placingSizeX = ref(0)
@@ -185,8 +182,6 @@
 
   let saveIntervalId: undefined|NodeJS.Timeout = undefined
   const hasPendingChanges = ref(false)
-
-  const showToolsDropdown = ref(false)
 
   const showMouseIndicator = computed(() => {
     return isHoveringPlanner.value && (isPlacing.value === undefined || placeOnDragEnd.value !== undefined)
@@ -225,6 +220,7 @@
       }
     }
     
+    // TODO: validate this format
     const existingData = plannerStore.maps.find((map) => map.mapName === props.mapName)
     console.log("Found existing:", existingData)
     if (existingData !== undefined) {
@@ -336,8 +332,8 @@
             // x, y to draw at
             item.xStart, item.yStart,
             // width, height of drawn image
-            item.imageWidth, item.imageHeight,
-            )
+            item.visibleWidth, item.visibleHeight,
+          )
         }
       })
 
@@ -416,6 +412,7 @@
 
       isDragging.value = true
       isDraggingToErase.value = true
+      handleMouseOverMap(event)
     }
   }
 
@@ -472,16 +469,8 @@
         }
       })
 
-      // TODO: Recalculate Collisions
-      // const collidedItems = []
-      // for (let i = 0; i < subtileData.value.length; i++) {
-      //   if (collisions.value.includes(i)) {
-      //     collidedItems.push(subtileData.value[i])
-      //   }
-      // }
-
+      subtilesWillBeErased.value = []
       hasPendingChanges.value = true
-      collisions.value = []
     }
     
     dragAmount.value = { x: 0, y: 0 }
@@ -506,18 +495,17 @@
       if (pos.x < props.imageWidth && pos.y < props.imageHeight) {
         if (placeOnDragEnd.value === undefined) {
           pos = getSubtilePositionAt(leftWithMargin, topWithMargin)
-  
-          collisions.value = []
+
+          subtilesWillBeErased.value = []
           for (let i = 0; i < subtileData.value.length; i++) {
             if (subtileData.value[i].xStart <= (pos.x + (placingSizeX.value * 4))
               && subtileData.value[i].xEnd >= pos.x
               && subtileData.value[i].yStart <= (pos.y + (placingSizeY.value * 4))
               && subtileData.value[i].yEnd >= pos.y
               ) {
-              collisions.value.push(i)
+              subtilesWillBeErased.value.push(subtileData.value[i].id)
             }
           }
-
           willBeErased.value = findCoveredTiles(pos.x, size.bottom)
 
           item.setAttribute("style", `left: ${pos.x}px; top: ${pos.y}px;`)
@@ -588,11 +576,20 @@
             if (!previouslyDragged.includes(key) && tileData.value.has(key)) {
               tileData.value.get(key)!!.isDragged = true
             }
-          })
-        }
 
-        dragAmount.value = { x: draggedX, y: draggedY }
-        draggedTiles.value = inDrag
+          })
+          
+          if (isDraggingToErase.value || placeOnDragEnd.value !== undefined) {
+            subtilesWillBeErased.value = []
+            subtileData.value.forEach((item) => {
+              if (inDrag.findIndex((x) => item.coversTiles.includes(x)) >= 0 && !subtilesWillBeErased.value.includes(item.id)) {
+                subtilesWillBeErased.value.push(item.id)
+              }
+            })
+          }
+          dragAmount.value = { x: draggedX, y: draggedY }
+          draggedTiles.value = inDrag
+        }
     }
   }
 
@@ -612,10 +609,10 @@
     isPlacing.value = 'Buildings/' + name
 
     buildingSizes.value.forEach((building) => {
-      console.log(building.name, name, building.name === name)
     })
     
-    const size = buildingSizes.value.find((building) => building.name.trim() === name.trim())
+    const size = buildingSizes.value.find((building) => building.name.toLowerCase().trim() === name.toLowerCase().trim())
+    console.log(name.toLowerCase().trim(), size?.x, size?.y)
     placingSizeX.value = size?.x ?? 12
     placingSizeY.value = size?.y ?? 12
     
@@ -625,7 +622,7 @@
   function grabCrafting(name: string) {
     isPlacing.value = 'Crafting/' + name
 
-    const size = craftingTableSizes.value.find((table) => table.name.trim() === name.trim())
+    const size = craftingTableSizes.value.find((table) => table.name.toLowerCase().trim() === name.toLowerCase().trim())
     placingSizeX.value = size?.x ?? 12
     placingSizeY.value = size?.y ?? 12
     
@@ -670,12 +667,15 @@
     const subtilePosition = getSubtilePositionAt(leftWithMargin, topWithMargin)
 
     let subtile = {
+      id: `${isPlacing.value}-${subtilePosition.x}-${subtilePosition.y}`,
       xStart: subtilePosition.x,
       xEnd: subtilePosition.x + (placingSizeX.value * 4),
       yStart: subtilePosition.y,
       yEnd: subtilePosition.y + (placingSizeY.value * 4),
-      imageHeight: size.height,
-      imageWidth: size.width,
+      visibleWidth: size.width,
+      visibleHeight: size.height,
+      collidableWidth: size.width,
+      collidableHeight: size.height,
       itemName: isPlacing.value!,
       coversTiles: [] as string[]
     }
@@ -685,6 +685,8 @@
       tileData.value.get(tileKey)!.usedFor = undefined
     })
 
+    subtileData.value = subtileData.value.filter((item) => !subtilesWillBeErased.value.includes(item.id))
+    
     subtileData.value.push(subtile)
 
     isPlacing.value = undefined
@@ -711,7 +713,6 @@
   }
 
   function undo() {
-    console.log("reverting to", previousSubtileData.value, previousTileData.value)
     subtileData.value = previousSubtileData.value
 
     previousTileData.value.forEach((tile) => {
@@ -721,6 +722,8 @@
     canUndo.value = false
     previousSubtileData.value = []
     previousTileData.value = new Map()
+    willBeErased.value = []
+    subtilesWillBeErased.value = []
     hasPendingChanges.value = true
   } 
 

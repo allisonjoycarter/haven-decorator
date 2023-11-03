@@ -1,5 +1,10 @@
 <template>
   <div class="flex flex-col">
+    <Notification 
+      class="md:hidden"
+      notificationId="mobile-planner-unavailable"
+      text="This planner is not supported on mobile yet. This is something that could be added in the future, but for now it will not function as expected on small devices."
+    />
     <div class="flex flex-row gap-4 ml-4">
       <button class="btn-text" @click="planning = plannerAreas[0]">Sun Haven</button>
       <button class="btn-text" @click="planning = plannerAreas[1]">Nel'Vari</button>

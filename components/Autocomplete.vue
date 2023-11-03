@@ -17,17 +17,33 @@
         <p class="text-sm px-4 py-1">No results match your search.</p>
       </div>
       <div v-else>
+        <slot name="resultsHeader"></slot>
         <button 
-          class="m-2 p-2 rounded-md z-50 w-full hover:bg-gray-300 hover:dark:bg-gray-500 flex flex-row gap-2 items-center"
-          v-for="(option, index) in results"
+          class="selectable-item w-full z-50 flex flex-row gap-2 items-center"
+          v-for="(option, index) in resultsOrPreview"
           :key="index"
           @click="selectOption(option.name)"
         >
           <img v-if="option.image !== undefined" :src="option.image" class="max-h-20">
           {{ option.name.replace("NelVari", "Nel'Vari") }}
         </button>
+        <button
+          v-if="hasMoreOptions" 
+          class="selectable-item w-full z-50 flex flex-row gap-2 items-center text-sm font-semibold"
+          @click="showOptionsModal = true"          
+          >
+          <Icon name="fa:table"/> See all options 
+        </button>
       </div>
     </div>
+    <AutocompleteModal
+      v-if="hasMoreOptions && showOptionsModal"
+      :items="options"
+      :title="category"
+      @clicked-outside-modal="showOptionsModal = false"
+      @select-item="selectFromModal"
+    >
+    </AutocompleteModal>
   </div>
 </template>
 
@@ -35,18 +51,30 @@
   import { ref, onMounted, computed } from 'vue'
 
   const props = defineProps<{
+    category: string,
     options: {name: string, image: string|undefined}[],
     placeholder: string|undefined,
+    previewOptions?: {name: string, image: string|undefined}[],
+    hasMoreOptions?: boolean
   }>()
-  const emit = defineEmits(['selected'])
+  const emit = defineEmits(['selected', 'seeAllOptions'])
   const search = ref('')
+  const showOptionsModal = ref(false)
   const results = ref([] as {name: string, image: string|undefined}[])
 
-  onMounted(() => {
-    results.value = props.options.slice(0, 5)
+  const resultsOrPreview = computed(() => {
+    if (results.value.length > 0) {
+      return results.value
+    }
+    return props.previewOptions ?? [] as {name: string, image: string|undefined}[]
   })
 
   function selectOption(option: string) {
+    emit('selected', option)
+  }
+
+  function selectFromModal(option: string) {
+    showOptionsModal.value = false
     emit('selected', option)
   }
 

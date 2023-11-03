@@ -15,12 +15,28 @@
     @apply py-2 font-semibold text-indigo-700 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-500 hover:bg-indigo-700 hover:bg-opacity-30;
   }
 
+  .btn-text.active {
+    @apply py-2 rounded-md font-semibold bg-indigo-500 text-gray-200;
+  }
+
   .btn-text-secondary {
     @apply py-2 font-semibold text-indigo-900 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-400 hover:bg-indigo-700 hover:bg-opacity-30;
   }
 
   .elevated-card {
     @apply bg-gray-200 border border-gray-300 dark:border-0 dark:bg-gray-800 p-4 rounded-lg drop-shadow-lg;
+  }
+
+  .selectable-item {
+    @apply m-2 p-2 rounded-md hover:bg-gray-300 hover:dark:bg-gray-500 ;
+  }
+
+  .pill {
+    @apply text-sm border border-indigo-400 text-indigo-700 dark:text-indigo-400 rounded-xl px-2 bg-indigo-400 bg-opacity-10 transition-colors ease-in duration-200 hover:text-indigo-500 hover:bg-indigo-700 hover:bg-opacity-30;
+  }
+  
+  .pill.active {
+    @apply text-sm border border-indigo-400 bg-indigo-500 text-gray-200 rounded-xl px-2 transition-colors ease-in duration-200;
   }
 }
 

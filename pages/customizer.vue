@@ -49,9 +49,8 @@
               v-for="(tabname, index) in tabs"
               :key="tabname"
               :class="{
-                'm-2': true,
-                'btn-text': index !== tab,
-                'py-2 px-1 rounded-md font-semibold bg-indigo-500 text-gray-200': index === tab
+                'm-2 btn-text': true,
+                'active': index === tab,
               }"
               @click="tab = index"
               >
