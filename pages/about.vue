@@ -29,7 +29,7 @@
         <div class="mx-auto">
           <h3 class="text-xl font-semibold">Data</h3>
           <p>
-            All saved data is stored locally in your browser. Only light/dark mode and the names of selected customizations are saved. To delete these, look for an option to "Clear Site Data" or clear your local storage.
+            All saved data is stored locally in your browser. If you encounter any strange behavior or issues on the website, clearing this data is a good remedy. To delete these, look for an option to "Clear Site Data" or clear your local storage.
           </p>
         </div>
       </div>
