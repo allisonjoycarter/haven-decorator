@@ -130,8 +130,8 @@ import type { CustomSet } from "~/models/custom_set";
 import type { SunHavenImage } from "~/models/image";
 
 useSeoMeta({
-  title: 'Haven Decorator - Customizer',
-  ogTitle: 'Haven Decorator - Customizer',
+  title: 'Customizer - Haven Decorator',
+  ogTitle: 'Customizer - Haven Decorator',
   description: 'Try out tier 3 house customizations from the Hardware Store!',
   ogDescription: 'Try out tier 3 house customizations from the Hardware Store!',
   ogImage: 'https://assets.havendecorator.com/decorations/sample_house.png',

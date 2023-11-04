@@ -104,8 +104,8 @@
 
 <script lang="ts" setup>
 useSeoMeta({
-  title: 'Haven Decorator - Privacy Policy',
-  ogTitle: 'Haven Decorator - Privacy Policy',
+  title: 'Haven Decorator Privacy Policy',
+  ogTitle: 'Haven Decorator Privacy Policy',
   description: 'Haven Decorator collects some data to improve our website. This is collected using cookies.',
   ogDescription: 'Haven Decorator collects some data to improve our website. This is collected using cookies.',
   twitterCard: 'summary',

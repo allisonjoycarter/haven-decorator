@@ -51,8 +51,8 @@
 
 <script lang="ts" setup>
 useSeoMeta({
-  title: 'Haven Decorator - About',
-  ogTitle: 'Haven Decorator - About',
+  title: 'About Haven Decorator',
+  ogTitle: 'About Haven Decorator',
   description: 'Haven Decorator was made with love - or at least - not hate. Oh, and Monster Fruit. Lots of Monster Fruit.',
   ogDescription: 'Haven Decorator was made with love - or at least - not hate. Oh, and Monster Fruit. Lots of Monster Fruit.',
   ogImage: 'https://assets.havendecorator.com/decorations/sample_house.png',
