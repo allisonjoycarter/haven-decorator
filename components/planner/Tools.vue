@@ -3,6 +3,7 @@
     class="fixed m-4 md:top-0 md:right-0 mobile:top-36 mobile:left-4 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4 drop-shadow-lg border border-gray-300 dark:border-gray-700"
     @mouseenter="(event) => event.stopPropagation()" 
     @mouseover="(event) => event.stopPropagation()"
+    @keydown.esc="openDropdown = ''"
   >
     <div class="flex flex-col">
       <button 
@@ -39,7 +40,7 @@
           v-for="item in dropdowns"
           :class="{
             'btn-text px-2': true,
-            'active': openDropdown === item,
+            'active': openDropdown === item && !shouldCloseDropdown,
           }"
           @click="() => openDropdown === item ? openDropdown = '' : openDropdown = item"
         >
@@ -47,7 +48,7 @@
         </button>
       </div>
       <Autocomplete
-        v-show="openDropdown === 'Building'"
+        v-show="openDropdown === 'Building' && !shouldCloseDropdown"
         category="Buildings"
         :options="buildingOptions"
         :preview-options="buildingOptions.slice(0, 5)"
@@ -57,7 +58,7 @@
       >
       </Autocomplete>
       <Autocomplete
-        v-show="openDropdown === 'Crop'"
+        v-show="openDropdown === 'Crop' && !shouldCloseDropdown"
         category="Crops"
         :options="cropOptions"
         :preview-options="cropOptions.slice(0, 5)"
@@ -66,7 +67,7 @@
         @selected="selected"
       />
       <Autocomplete
-        v-show="openDropdown === 'Path'"
+        v-show="openDropdown === 'Path' && !shouldCloseDropdown"
         category="Paths"
         :options="pathOptions"
         :preview-options="pathOptions.slice(0, 5)"
@@ -75,7 +76,7 @@
         @selected="selected"
       />
       <Autocomplete
-        v-show="openDropdown === 'Tree'"
+        v-show="openDropdown === 'Tree' && !shouldCloseDropdown"
         category="Trees"
         :options="treeOptions"
         :preview-options="treeOptions.slice(0, 5)"
@@ -84,7 +85,7 @@
         @selected="selected"
       />
       <Autocomplete
-        v-show="openDropdown === 'Crafting Table'"
+        v-show="openDropdown === 'Crafting Table' && !shouldCloseDropdown"
         category="Crafting Tables"
         :options="craftingTableOptions"
         :preview-options="craftingTableOptions.slice(0, 5)"
@@ -118,6 +119,7 @@
   const props = defineProps<{
     isLoadComplete: boolean,
     isFarm?: boolean,
+    shouldCloseDropdown?: boolean,
   }>()
   const emit = defineEmits([
     'selectedCrop',

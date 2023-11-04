@@ -8,7 +8,6 @@
       @mousemove="handleMouseOverMap"
       @mouseup="handleDragEnd"
       @mousedown="handleMapClick"
-
       @keydown="handleKeyPress"
 
       @contextmenu="(event) => event.preventDefault()"
@@ -34,6 +33,8 @@
         
         :is-farm="isFarm"
         :is-load-complete="isLoadComplete"
+        :should-close-dropdown="shouldCloseDropdown"
+        @mouseenter="shouldCloseDropdown = false"
         @keydown="(event) => event.stopPropagation()"
         @contextmenu="(event: any) => event.stopPropagation()"
       >
@@ -143,6 +144,7 @@
 
   const isLoading = ref(true)
   const isHoveringPlanner = ref(false)
+  const shouldCloseDropdown = ref(false)
   
   const planner = ref(null as null|HTMLElement)
   const plannerArea = ref(null as null|HTMLElement)
@@ -782,6 +784,8 @@
         left: 100,
         behavior: "smooth",
       });
+    } else if (event.key === 'Escape') {
+      shouldCloseDropdown.value = true
     }
   }
 
