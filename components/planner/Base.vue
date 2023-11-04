@@ -655,7 +655,7 @@
       name: name,
       visible_x: 12,
       visible_y: 17,
-      placement_x: 12,
+      placement_x: 10,
       placement_y: 6
     }
   }
