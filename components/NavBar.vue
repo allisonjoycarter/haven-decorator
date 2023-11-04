@@ -11,8 +11,8 @@
           <NuxtLink 
             :class="{
               'py-2 no-underline  font-semibold': true,
-              'text-indigo-800 dark:text-indigo-200': item.route === currentRoute,
-              'text-gray-900 dark:text-gray-300': item.route !== currentRoute
+              'text-indigo-800 dark:text-indigo-200': $route.path.includes(item.route),
+              'text-gray-900 dark:text-gray-300': !$route.path.includes(item.route)
             }" :to="item.route">
             {{ item.name }}
           </NuxtLink>
@@ -21,8 +21,8 @@
             style="width: 100%; height: 2px;"
             :class="{
               'transition-colors ease-in-out': true,
-              'bg-transparent': item.route !== currentRoute,
-              'bg-indigo-700': item.route === currentRoute,
+              'bg-transparent': !$route.path.includes(item.route),
+              'bg-indigo-700': $route.path.includes(item.route),
             }"></div>
         </div>
       </div>
@@ -39,7 +39,6 @@
     { route: "/planner", name: "Planner" },
     { route: "/about", name: "About" }
   ]
-  const currentRoute = computed(() => route.path)
 </script>
 
 <style scoped>

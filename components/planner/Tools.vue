@@ -5,14 +5,11 @@
     @mouseover="(event) => event.stopPropagation()"
   >
     <div class="flex flex-col">
-      <p>left click drag to measure & place</p>
-      <p>right click drag to erase</p>
-      <p>ctrl+z to undo</p>
       <button 
         class="btn-text text-sm py-1 my-1 text-left w-max"
         @click="showMoreOptions = !showMoreOptions"
       >
-        {{ showMoreOptions ? 'Hide' : 'Show' }} More Options 
+        {{ showMoreOptions ? 'Hide' : 'Show' }} Options 
         <Icon :class="{
           'transition-transform duration-200': true,
           'rotate-180': showMoreOptions
@@ -72,6 +69,7 @@
         v-show="openDropdown === 'Path'"
         category="Paths"
         :options="pathOptions"
+        :preview-options="pathOptions.slice(0, 5)"
         :has-more-options="true"
         placeholder="Search Paths"
         @selected="selected"
@@ -104,21 +102,11 @@
     >
       <slot/>
     </PlannerSaveModal>
-    <Modal
+    <PlannerLoadModal
       v-if="isLoadModalOpen && canShowLoadModal"
-      @clicked-outside-modal="isLoadModalOpen = false"
-    >
-      <label for="loadfile" class="
-        relative flex flex-col gap-4 
-        justify-center items-center 
-        h-60 p-10 rounded-lg border-2 border-dashed border-gray-400
-        hover:bg-gray-300 hover:dark:bg-gray-600  transition-colors duration-200
-        ">
-        <span class="drop-title">Drop file here</span>
-        or
-        <input class="ml-6" type="file" accept="application/json" id="loadfile" @change="loadFromFile">
-      </label>
-    </Modal>
+      @close="isLoadModalOpen = false"
+      @on-file-selected="loadFromFile"
+    ></PlannerLoadModal>
     </div>
   </div>
 </template>
@@ -160,7 +148,16 @@
   const crops = ref([] as string[])
   const craftingTables = ref([] as string[])
   const trees = ref([] as string[])
-  const paths = ['Workshop']
+  const paths = [
+    'Brick',
+    'Oak Plank',
+    'Patterned',
+    'Wood',
+    'Wooden Plank',
+    'Workshop',
+    'White Stone',
+    'Stone'
+  ]
 
   const openDropdown = ref('')
 
@@ -170,7 +167,7 @@
     return buildings.value.map((building) => {
       return {
         name: building,
-        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/' + building + '.png'
+        image: 'https://assets.havendecorator.com/decorations/Planner/Buildings/' + building + '.png'
       }
     })
   })
@@ -179,7 +176,7 @@
     return crops.value.map((crop) => {
       return {
         name: crop,
-        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crops/' + crop + '.png'
+        image: 'https://assets.havendecorator.com/decorations/Planner/Crops/' + crop + '.png'
       }
     })
   })
@@ -188,7 +185,7 @@
     return craftingTables.value.map((path) => {
       return {
         name: path,
-        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/' + path + '.png'
+        image: 'https://assets.havendecorator.com/decorations/Planner/Crafting/' + path + '.png'
       }
     })
   })
@@ -197,7 +194,7 @@
     return paths.map((path) => {
       return {
         name: path,
-        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Paths/' + path + '.png'
+        image: 'https://assets.havendecorator.com/decorations/Planner/Paths/' + path + '.png'
       }
     })
   })
@@ -206,7 +203,7 @@
     return trees.value.map((path) => {
       return {
         name: path,
-        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Trees/' + path + '.png'
+        image: 'https://assets.havendecorator.com/decorations/Planner/Trees/' + path + '.png'
       }
     })
   })
@@ -216,20 +213,20 @@
   })
 
   onMounted(() => {
-    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crops/list.txt").then((result) => {
-      crops.value = result.data.split('\n').map((name: string) => name.trim())
+    axios.get("https://assets.havendecorator.com/decorations/Planner/Crops/list.txt").then((result) => {
+      crops.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
     })
 
-    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/list.txt").then((result) => {
-      buildings.value = result.data.split('\n').map((name: string) => name.trim())
+    axios.get("https://assets.havendecorator.com/decorations/Planner/Buildings/building_names.txt").then((result) => {
+      buildings.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
     })
 
-    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/list.txt").then((result) => {
-      craftingTables.value = result.data.split('\n').map((name: string) => name.trim())
+    axios.get("https://assets.havendecorator.com/decorations/Planner/Crafting/list.txt").then((result) => {
+      craftingTables.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
     })
 
-    axios.get("https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Trees/list.txt").then((result) => {
-      trees.value = result.data.split('\n').map((name: string) => name.trim())
+    axios.get("https://assets.havendecorator.com/decorations/Planner/Trees/list.txt").then((result) => {
+      trees.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
     })
   })
   
@@ -274,8 +271,8 @@
     emit('saveDataAsJson')
   }
 
-  function loadFromFile(payload: Event) {
-    emit('loadDataFromJson', payload)
+  function loadFromFile(file: File) {
+    emit('loadDataFromJson', file)
     isCurrentLoadComplete.value = true
   }
 </script>

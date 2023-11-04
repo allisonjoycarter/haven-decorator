@@ -135,6 +135,7 @@
     verticalTileThreshold: number,
     horizontalTileThreshold: number,
   }>()
+  const emit = defineEmits(['goToMap'])
   const plannerStore = usePlannerStore()
 
   const isLoading = ref(true)
@@ -217,7 +218,7 @@
         tileData.value.set(`${x}-${y}`, {
           x: x,
           y: y,
-          outOfBounds: true,
+          outOfBounds: false,
           isDragged: false,
           usedFor: undefined,
         })
@@ -235,7 +236,7 @@
 
     isLoading.value = false
 
-    // Save Progress every 1 minute
+    // Save Progress every 30 seconds
     saveIntervalId = setInterval(() => {
       if (hasPendingChanges.value) {
         const data = {} as any
@@ -348,12 +349,8 @@
     }
   }
 
-  function loadFromFile(payload: Event) {
+  function loadFromFile(file: File) {
     isLoadComplete.value = false
-    const files = (payload.target as any).files;
-    if (files.length <= 0) {
-      return false;
-    }
 
     const fr = new FileReader();
 
@@ -371,13 +368,17 @@
       }
 
       const result = JSON.parse(e.target.result);
+      if (result.base !== props.mapName) {
+        emit('goToMap', result.base)
+      }
+
       subtileData.value = result.subtileData
 
       Object.values(result.tileData).forEach((entry: any) => {
         tileData.value.set(`${entry.x}-${entry.y}`, entry)
       })
     }
-    fr.readAsText(files.item(0))
+    fr.readAsText(file)
     isLoadComplete.value = true
     hasPendingChanges.value = true
   }
@@ -682,6 +683,7 @@
     const leftWithMargin = event.pageX - marginLeft.value - (yPixels / 2);
 
     const subtilePosition = getSubtilePositionAt(leftWithMargin, topWithMargin)
+    const size = (placingItem.value as HTMLElement).getBoundingClientRect()
 
     let subtile = {
       id: `${isPlacing.value}-${subtilePosition.x}-${subtilePosition.y}`,
@@ -690,14 +692,13 @@
       yStart: subtilePosition.y,
       yEnd: subtilePosition.y + (dimensions.placement_y * 4),
       visibleWidth: dimensions.visible_x * 4,
-      visibleHeight: dimensions.visible_y * 4,
+      visibleHeight: size.height,
       collidableWidth: dimensions.placement_x * 4,
       collidableHeight: dimensions.placement_y * 4,
       itemName: isPlacing.value!,
       coversTiles: [] as string[]
     }
 
-    const size = (placingItem.value as HTMLElement).getBoundingClientRect()
     subtile.coversTiles = findCoveredTiles(subtilePosition.x, size.bottom)
     subtile.coversTiles.forEach((tileKey) => {
       tileData.value.get(tileKey)!.usedFor = undefined

@@ -12,7 +12,7 @@
       :placeholder="placeholder"
     />
     <div 
-      class=" w-full pr-4 mt-1 dark:bg-gray-700 bg-gray-100 drop-shadow-lg rounded-md">
+      class=" w-full pr-4 mt-1 dark:bg-gray-700 bg-gray-100 drop-shadow-lg rounded-md max-h-96 overflow-y-scroll">
       <div v-if="results.length === 0 && search !== ''">
         <p class="text-sm px-4 py-1">No results match your search.</p>
       </div>
