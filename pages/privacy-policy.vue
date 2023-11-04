@@ -51,6 +51,7 @@
       <ul class="list-disc ml-6">
         <li>User ID</li>
         <li>Session ID</li> 
+        <li>Device ID</li> 
       </ul>
       <p class="mt-2">
         These IDs are tracked within a single browser. When changing browsers or visiting from a private/incognito window, 

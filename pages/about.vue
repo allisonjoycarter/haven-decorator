@@ -9,8 +9,7 @@
               This is a pet project designed to make trying out new house customization options fun and easy.
                Normally you can find me working on the <a href="https://sun-haven.fandom.com/wiki/Sun_Haven_Wiki" target="_blank">Sun Haven Wiki</a>,
                 but it doesn't allow for interactive setups like this website. Eventually I'd like to expand this to preview 
-              other kinds of decorating, but those would be much more expansive additions. At least for viewing the customizations, 
-              I hope you enjoy!
+              other kinds of decorating, but those would be much more expansive additions. I hope you enjoy!
             </p>
             <p>
               - Doubleterrainbow
@@ -37,10 +36,10 @@
       
         <div>
           <div class="my-4 elevated-card">
-            <h3>Analytics</h3>
+            <h3 class="text-xl font-semibold">Analytics</h3>
             <div>
               This website collects data to track page views, button clicks, and other relevant data to 
-              understand usage and performance. We use Azure Application Insights to track this data so we can 
+              understand usage and performance. We use PostHog to track this data so we can 
               improve this website. To see more details, go to the <a href="/privacy-policy">Privacy Policy</a>. 
               For questions about this policy, contact doubleterrainbow@gmail.com  
             </div>

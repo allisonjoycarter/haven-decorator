@@ -1,8 +1,8 @@
 <template>
-<div v-if="canShow" class="fixed notification mx-4 ">
-  <div class="drop-shadow-lg bg-gray-300 dark:bg-gray-700 rounded-md flex flex-row">
-    <p class="m-4 message">{{ text }}</p>
-    <button class="flex-grow-0" @click="close">
+<div v-if="canShow" class="fixed notification w-screen md:w-96 md:mx-4 bottom-0 left-0">
+  <div class="drop-shadow-lg bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-md flex flex-row mx-4 mb-4">
+    <slot class="m-4 message"/>
+    <button v-if="showClose" class="flex-grow-0" @click="close">
       <Icon name="fa:close"/>
     </button>
   </div>
@@ -15,8 +15,10 @@
 const store = useMainStore()
 const props = defineProps<{
   notificationId: string,
-  text: string
+  showClose?: boolean
 }>()
+const emit = defineEmits(['onAction'])
+
 const isOpen = ref(true)
 
 const canShow = computed(() => {
@@ -38,8 +40,6 @@ function close() {
 
 .notification {
   z-index: 200;
-  top: 80vh;
-  width: 90vw;
 }
 </style>
   

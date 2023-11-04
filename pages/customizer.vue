@@ -138,6 +138,7 @@ useSeoMeta({
   twitterCard: 'summary',
 })
 
+const { $posthog } = useNuxtApp()
 
 const store = useCustomizationsStore()
 const blobURL =
@@ -229,6 +230,9 @@ async function loadImages() {
 }
 
 function selectRandom() {
+  if ($posthog !== undefined) {
+    $posthog.capture('shuffle')
+  }
   onDoorSelected(doorImages.value[getRandomArbitrary(0, doorImages.value.length)])
   onRoofSelected(roofImages.value[getRandomArbitrary(0, roofImages.value.length)])
   onWallsSelected(wallImages.value[getRandomArbitrary(0, wallImages.value.length)])
@@ -299,6 +303,9 @@ function getRandomArbitrary(min: number, max: number) {
 }
 
 function saveCurrentSet() {
+  if ($posthog !== undefined) {
+    $posthog.capture('save customization')
+  }
   store.addSavedSet({
     name: undefined,
     roof: roof.value as SunHavenImage,
