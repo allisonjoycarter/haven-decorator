@@ -15,6 +15,12 @@
         </ul>
       </div>
       <div class="elevated-card my-4">
+        <h2 class="text-lg font-semibold">Navigating</h2>
+        <p>You can move around the map with WASD or the arrow keys. The movement is a bit awkward because it relies on how each browser handles scrolling. 
+          Clicking the middle mouse button is my recommended way to move around quickly. You can also zoom the webpage out (with CTRL + scroll or CMD + scroll).
+        </p>
+      </div>
+      <div class="elevated-card my-4">
         <h2 class="text-lg font-semibold">Saving</h2>
         <p>All maps are saved locally on your current browser every 30 seconds. Refreshing or clicking away will 
           reset your state to the last local save. Clicking Save > Save Config will allow you to download a file representing

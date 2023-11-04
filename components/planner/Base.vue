@@ -31,9 +31,10 @@
         @save-data-as-json="saveAsFile"
         @load-data-from-json="loadFromFile"
         @start-over="resetData"
-
+        
         :is-farm="isFarm"
         :is-load-complete="isLoadComplete"
+        @keydown="(event) => event.stopPropagation()"
         @contextmenu="(event: any) => event.stopPropagation()"
       >
         <div style="height: 600px" class="overflow-scroll">
@@ -757,10 +758,30 @@
   } 
 
   function handleKeyPress(event: KeyboardEvent) {
-    if (event.ctrlKey && event.key == 'z') {
+    if (event.ctrlKey && event.key === 'z') {
       if (canUndo.value) {
         undo()
       }
+    } else if (event.key === 'w' || event.key === "ArrowUp") {
+      window.scrollBy({
+        top: -100,
+        behavior: "smooth",
+      });
+    } else if (event.key === 's' || event.key === "ArrowDown") {
+      window.scrollBy({
+        top: 100,
+        behavior: "smooth",
+      });
+    } else if (event.key === 'a' || event.key === "ArrowLeft") {
+      window.scrollBy({
+        left: -100,
+        behavior: "smooth",
+      });
+    } else if (event.key === 'd' || event.key === "ArrowRight") {
+      window.scrollBy({
+        left: 100,
+        behavior: "smooth",
+      });
     }
   }
 
