@@ -477,10 +477,12 @@
             } else {
               tileData.value.get(`${tile.x}-${tile.y}`).usedFor = undefined
             }
-
-            subtileData.value = subtileData.value.filter((subtile) => 
-              !subtile.coversTiles.includes(`${tile.x}-${tile.y}`)
-            )
+            
+            if (placeOnDragEnd.value === undefined || !placeOnDragEnd.value.includes("Path")) {
+              subtileData.value = subtileData.value.filter((subtile) => 
+                !subtilesWillBeErased.value.includes(subtile.id)
+              )
+            }
           }
         }
       }
@@ -570,18 +572,21 @@
           subtilesWillBeErased.value = []
           willBeErased.value = []
 
+          for (let i = 0; i < subtileData.value.length; i++) {
+            if (subtileData.value[i].xEnd >= leftX
+              && subtileData.value[i].xStart <= rightX
+              && subtileData.value[i].yEnd >= topY
+              && subtileData.value[i].yStart <= bottomY
+              ) {
+              subtilesWillBeErased.value.push(subtileData.value[i].id)
+            }
+          }
+
           for (let x = leftX; x < rightX + 24; x+=24) {
             for (let y = topY; y < bottomY + 24; y+=24) {
               const tile = getTilePositionAt(x, y)
               if (tileData.value.has(`${tile.x}-${tile.y}`)) {
                 willBeErased.value.push(`${tile.x}-${tile.y}`)
-                subtileData.value
-                  .filter((item) => item.coversTiles.includes(`${tile.x}-${tile.y}`))
-                  .forEach((item) => {
-                    if (!subtilesWillBeErased.value.includes(item.id)) {
-                      subtilesWillBeErased.value.push(item.id)
-                    }
-                  })
               }
             }
           }
@@ -674,7 +679,9 @@
     for (let x = position.x; x < position.x + (tileWidth*24); x+=24) {
       for (let y = position.y - (tileHeight*24) + 24; y < position.y + 24; y+=24) {
         if (tileData.value.has(`${x}-${y}`)) {
-          coveredTiles.push(`${x}-${y}`)
+          if (tileData.value.get(`${x}-${y}`).usedFor == undefined || !tileData.value.get(`${x}-${y}`).usedFor.includes("Path")) {
+            coveredTiles.push(`${x}-${y}`)
+          }
         }
       }
     }
@@ -709,12 +716,14 @@
     subtile.coversTiles = findCoveredTiles(subtilePosition.x, size.bottom)
     subtile.coversTiles.forEach((tileKey) => {
       const tile = tileData.value.get(tileKey)!
-      previousTileData.value.set(tileKey, {
-        x: tile.x, y: tile.y,
-        outOfBounds: tile.outOfBounds,
-        usedFor: tile.usedFor
-      })
-      tile.usedFor = undefined
+      if (!tileKey.includes("Path")) {
+        previousTileData.value.set(tileKey, {
+          x: tile.x, y: tile.y,
+          outOfBounds: tile.outOfBounds,
+          usedFor: tile.usedFor
+        })
+        tile.usedFor = undefined
+      }
     })
 
     subtileData.value = subtileData.value.filter((item) => !subtilesWillBeErased.value.includes(item.id))
