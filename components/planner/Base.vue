@@ -6,7 +6,7 @@
       @mouseleave="mouseLeftPlanner()"
 
       @mousemove="handleMouseOverMap"
-      @mouseup="handleDragEnd()"
+      @mouseup="handleDragEnd"
       @mousedown="handleMapClick"
 
       @keydown="handleKeyPress"
@@ -61,6 +61,12 @@
           <div class="no-select ml-6 mt-4 bg-white bg-opacity-40 text-gray-950 px-1 rounded-sm text-sm font-bold" v-show="dragAmount.x > 0">{{ dragAmount.x }} x {{ dragAmount.y }}</div>
         </div>
       </div>
+      <div :class="{
+        'absolute z-30 opacity-40': true,
+        'bg-white': !isPlacing && !isDraggingToErase,
+        'bg-blue-700': !isDraggingToErase,
+        'bg-red-500': isDraggingToErase,
+      }" v-show="isDragging" ref="mouseDragBox"></div>
       <div>
         <div
           :style="mapBackgroundStyle + fullSizeStyle"
@@ -95,17 +101,13 @@
               <div
                 :class="{
                   'no-select z-40 absolute top-0 left-0 tile': true,
-                  'highlight-square': position.isDragged,
-                  'bg-white': position.isDragged && !isPlacing && !isDraggingToErase,
-                  'bg-blue-700': position.isDragged && !isDraggingToErase,
-                  'bg-red-500': position.isDragged && isDraggingToErase,
                   }"
               ></div>
               <img 
                 v-if="position.usedFor !== undefined"
                 :class="{
                   'no-select z-20 absolute top-0 left-0 tile': true,
-                  'grayscale contrast-200': (position.isDragged && isDraggingToErase) || willBeErased.includes(`${position.x}-${position.y}`),
+                  'grayscale contrast-200': willBeErased.includes(`${position.x}-${position.y}`),
                 }"
                 style="max-width: unset;"
                 :src="'https://assets.havendecorator.com/decorations/Planner/' + position.usedFor + '.png'"/>
@@ -157,10 +159,11 @@
   const placeOnDragEnd = ref(undefined as string|undefined)
   const isDragging = ref(false)
   const isDraggingToErase = ref(false)
+  const mouseDragBox = ref(null as null|HTMLElement)
   const dragStart = ref({x: 0, y: 0})
+  const dragEnd = ref({x: 0, y: 0})
   const dragAmount = ref({x: 0, y: 0})
   const draggedTiles = ref([] as string[])
-  const currentDragLocation = ref({x: 0, y: 0})
 
   const isPlacing = ref(undefined as string|undefined)
   const placingItem = ref(null as null|HTMLElement)
@@ -323,6 +326,16 @@
         context.globalAlpha = 1.0
       }
 
+      tileData.value.forEach((tile) => {
+        if (tile.usedFor !== undefined) {
+          const itemImage = new Image()
+          itemImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + tile.usedFor + '.png'
+          itemImage.onload = function() {
+            context.drawImage(itemImage, tile.x - 11, tile.y - 11)
+          }
+        }
+      })
+
       subtileData.value.forEach((item) => {
         const decoImage = new Image()
         decoImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + item.itemName + '.png'
@@ -334,16 +347,6 @@
             // width, height of drawn image
             item.visibleWidth, item.visibleHeight,
           )
-        }
-      })
-
-      tileData.value.forEach((tile) => {
-        if (tile.usedFor !== undefined) {
-          const itemImage = new Image()
-          itemImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + tile.usedFor + '.png'
-          itemImage.onload = function() {
-            context.drawImage(itemImage, tile.x - 11, tile.y - 11)
-          }
         }
       })
     }
@@ -391,6 +394,13 @@
     if (event.buttons === 1) {
       if (isPlacing.value === undefined || placeOnDragEnd.value !== undefined) {
         isDragging.value = true
+
+        const startingTile = getTilePositionAt(
+          event.pageX - marginLeft.value,
+          event.pageY - marginTop.value
+        )
+        dragStart.value = { x: startingTile.x, y: startingTile.y }
+
         handleMouseOverMap(event)
       } else {
         // Store for undo
@@ -409,72 +419,71 @@
         placeOnDragEnd.value = undefined
       } 
 
+      const startingTile = getTilePositionAt(
+          event.pageX - marginLeft.value,
+          event.pageY - marginTop.value
+      )
+      dragStart.value = { x: startingTile.x, y: startingTile.y }
+
       isDragging.value = true
       isDraggingToErase.value = true
       handleMouseOverMap(event)
     }
   }
 
-  function handleDragEnd() {
-    isDragging.value = false
-    dragStart.value = {x: 0, y: 0}
-    draggedTiles.value = []
-    
-    if (placeOnDragEnd.value !== undefined) {
+  function handleDragEnd(event: MouseEvent|undefined) {
+    if (placeOnDragEnd.value !== undefined || isDraggingToErase.value) {
       // Store for undo
       canUndo.value = true
       previousTileData.value = new Map()
       previousSubtileData.value = subtileData.value.map((item) => item)
 
-      tileData.value.forEach((tile) => {
-        if (tile.isDragged) {
-          // Store for undo
-          previousTileData.value.set(`${tile.x}-${tile.y}`, {
-            x: tile.x, y: tile.y,
-            isDragged: false,
-            outOfBounds: true,
-            usedFor: tile.usedFor,
-          })
-          
-          tile.usedFor = placeOnDragEnd.value
-          subtileData.value = subtileData.value.filter((subtile) => 
-            !subtile.coversTiles.includes(`${tile.x}-${tile.y}`)
-          )
-        }
-      }) 
-    }
+      if (event !== undefined) {
+        const endTile = getTilePositionAt(event.pageX - marginLeft.value, event.pageY - marginTop.value)
+        dragEnd.value = { x: endTile.x, y: endTile.y }
+      }
 
-    if (isDraggingToErase.value) {
-      // Store for undo
-      canUndo.value = true
-      previousTileData.value = new Map()
-      previousSubtileData.value = subtileData.value
-      
-      tileData.value.forEach((tile) => {
-        if (tile.isDragged) {
-          // Store for undo
-          previousTileData.value.set(`${tile.x}-${tile.y}`, {
-            x: tile.x, y: tile.y,
-            isDragged: false,
-            outOfBounds: true,
-            usedFor: tile.usedFor,
-          })
-          
-          tile.usedFor = undefined
-          
-          subtileData.value = subtileData.value.filter((subtile) => 
-            !subtile.coversTiles.includes(`${tile.x}-${tile.y}`)
-          )
-        }
-      })
+      const minX = Math.min(dragStart.value.x, dragEnd.value.x)
+      const maxX = Math.max(dragStart.value.x, dragEnd.value.x)
 
+      const minY = Math.min(dragStart.value.y, dragEnd.value.y)
+      const maxY = Math.max(dragStart.value.y, dragEnd.value.y)
+
+      for (let x = minX; x < maxX + 24; x+=24) {
+        for (let y = minY; y < maxY + 24; y+=24) {
+          const tile = getTilePositionAt(x, y)
+          if (tileData.value.has(`${tile.x}-${tile.y}`)) {
+
+            // Store for undo
+            previousTileData.value.set(`${tile.x}-${tile.y}`, {
+              x: tile.x, y: tile.y,
+              outOfBounds: false,
+              usedFor: tileData.value.get(`${tile.x}-${tile.y}`)!!.usedFor,
+            })
+            
+            if (placeOnDragEnd.value !== undefined) {
+              tileData.value.get(`${tile.x}-${tile.y}`).usedFor = placeOnDragEnd.value
+            } else {
+              tileData.value.get(`${tile.x}-${tile.y}`).usedFor = undefined
+            }
+
+            subtileData.value = subtileData.value.filter((subtile) => 
+              !subtile.coversTiles.includes(`${tile.x}-${tile.y}`)
+            )
+          }
+        }
+      }
+
+      willBeErased.value = []
       subtilesWillBeErased.value = []
       hasPendingChanges.value = true
     }
     
+    dragStart.value = { x: 0, y: 0 }
+    dragEnd.value = { x: 0, y: 0 }
     dragAmount.value = { x: 0, y: 0 }
+    isDragging.value = false
     isDraggingToErase.value = false
-    tileData.value.forEach((tile) => tile.isDragged = false)
   }
 
   function roundAt(value: number, roundUpAt: number) {
@@ -534,63 +543,47 @@
     const style = `top: ${position.y}px; left: ${position.x}px;`;
     indicator.setAttribute("style", style);
     
-    if (isDragging.value && (
-      dragStart.value.x === 0 
-      || currentDragLocation.value.x !== position.x 
-      || currentDragLocation.value.y !== position.y
-      )
+    if (isDragging.value 
+      && (dragEnd.value.x !== position.x 
+      || dragEnd.value.y !== position.y)
       ) {
-        currentDragLocation.value = {x: position.x , y: position.y}
-
-        if (dragStart.value.x === 0 && dragStart.value.y === 0) {
-          dragStart.value = {x: position.x , y: position.y}
-        }
-
+        dragEnd.value = {x: position.x , y: position.y}
+        
         let leftX = Math.min(dragStart.value.x, position.x)
         let rightX = Math.max(dragStart.value.x, position.x)
-
+        
         let topY = Math.min(dragStart.value.y, position.y)
         let bottomY = Math.max(dragStart.value.y, position.y)
+        
+        if (isDraggingToErase.value) {
+          subtilesWillBeErased.value = []
+          willBeErased.value = []
 
-        const inDrag = [`${dragStart.value.x}-${dragStart.value.y}`];
-        const previouslyDragged = draggedTiles.value
-
-        let draggedX = 0
-        let draggedY = 0
-        for (var x = leftX; x <= rightX; x += 24) {
-          draggedX++
-          for (var y = topY; y <= bottomY; y += 24) {
-            if (x === leftX) {
-              draggedY++
-            }
-            inDrag.push(`${x}-${y}`)
-          }
-        }
-
-        if (previouslyDragged.join(' ') !== inDrag.join(' ')) {
-          previouslyDragged.forEach((key) => {
-            if (!inDrag.includes(key) && tileData.value.has(key)) {
-              tileData.value.get(key)!!.isDragged = false
-            }
-          })
-          inDrag.forEach((key) => {
-            if (!previouslyDragged.includes(key) && tileData.value.has(key)) {
-              tileData.value.get(key)!!.isDragged = true
-            }
-
-          })
-          
-          if (isDraggingToErase.value || placeOnDragEnd.value !== undefined) {
-            subtilesWillBeErased.value = []
-            subtileData.value.forEach((item) => {
-              if (inDrag.findIndex((x) => item.coversTiles.includes(x)) >= 0 && !subtilesWillBeErased.value.includes(item.id)) {
-                subtilesWillBeErased.value.push(item.id)
+          for (let x = leftX; x < rightX + 24; x+=24) {
+            for (let y = topY; y < bottomY + 24; y+=24) {
+              const tile = getTilePositionAt(x, y)
+              if (tileData.value.has(`${tile.x}-${tile.y}`)) {
+                willBeErased.value.push(`${tile.x}-${tile.y}`)
+                subtileData.value
+                  .filter((item) => item.coversTiles.includes(`${tile.x}-${tile.y}`))
+                  .forEach((item) => {
+                    if (!subtilesWillBeErased.value.includes(item.id)) {
+                      subtilesWillBeErased.value.push(item.id)
+                    }
+                  })
               }
-            })
+            }
           }
-          dragAmount.value = { x: draggedX, y: draggedY }
-          draggedTiles.value = inDrag
         }
+
+        const dragBox = (mouseDragBox.value as HTMLElement)
+
+        const positionCss = `top: ${topY - 12}px; left: ${leftX - 12}px;`
+        const sizeCss = `height: ${bottomY - topY + 24}px; width: ${rightX - leftX + 24}px;`
+
+        dragBox.setAttribute("style", positionCss + sizeCss)
+
+        dragAmount.value = { x: Math.round((rightX - leftX) / 24) + 1, y: Math.round((bottomY - topY) / 24) + 1 }
     }
   }
 
@@ -619,6 +612,7 @@
   }
 
   function grabBuilding(name: string) {
+    placeOnDragEnd.value = undefined
     isPlacing.value = 'Buildings/' + name
 
     const size = buildingSizes.value.find((building) => building.name.toLowerCase().trim() === name.toLowerCase().trim())
@@ -632,6 +626,7 @@
   }
 
   function grabCrafting(name: string) {
+    placeOnDragEnd.value = undefined
     isPlacing.value = 'Crafting/' + name
 
     const size = craftingTableSizes.value.find((table) => table.name.toLowerCase().trim() === name.toLowerCase().trim())
@@ -645,6 +640,7 @@
   }
 
   function grabTree(name: string) {
+    placeOnDragEnd.value = undefined
     isPlacing.value = 'Trees/' + name
 
     placingDimensions.value = {
@@ -701,7 +697,13 @@
 
     subtile.coversTiles = findCoveredTiles(subtilePosition.x, size.bottom)
     subtile.coversTiles.forEach((tileKey) => {
-      tileData.value.get(tileKey)!.usedFor = undefined
+      const tile = tileData.value.get(tileKey)!
+      previousTileData.value.set(tileKey, {
+        x: tile.x, y: tile.y,
+        outOfBounds: tile.outOfBounds,
+        usedFor: tile.usedFor
+      })
+      tile.usedFor = undefined
     })
 
     subtileData.value = subtileData.value.filter((item) => !subtilesWillBeErased.value.includes(item.id))
@@ -762,7 +764,12 @@
   function mouseLeftPlanner() {
     isHoveringPlanner.value = false;
     (planner.value as HTMLElement).blur();
-    handleDragEnd()
+
+    dragStart.value = { x: 0, y: 0 }
+    dragEnd.value = { x: 0, y: 0 }
+    dragAmount.value = { x: 0, y: 0 }
+    isDragging.value = false
+    isDraggingToErase.value = false
   }
 
   function resetData() {

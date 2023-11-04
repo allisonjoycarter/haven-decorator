@@ -35,6 +35,7 @@
           <li>Totems & Scarecrows with ranges</li>
           <li>Optimizations for speed</li>
           <li>Mobile Support</li>
+          <li>Add Decorations & Furniture</li>
           <li>Section & Building Naming</li>
         </ul>
       </div>
