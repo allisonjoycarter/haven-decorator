@@ -11,8 +11,16 @@
     @apply py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-md transition-all ease-in duration-200 hover:bg-indigo-400;
   }
 
+  .btn-danger {
+    @apply py-2 px-4 bg-red-800 text-white font-semibold rounded-lg shadow-md transition-all ease-in duration-200 hover:bg-red-600;
+  }
+
   .btn-text {
-    @apply py-2 font-semibold text-indigo-900 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-400 hover:bg-indigo-700 hover:bg-opacity-30;
+    @apply py-2 font-semibold text-indigo-700 dark:text-indigo-400 rounded-md p-1 bg-transparent transition-colors ease-in duration-200 hover:text-indigo-500 hover:bg-indigo-700 hover:bg-opacity-30;
+  }
+
+  .btn-text.active {
+    @apply py-2 rounded-md font-semibold bg-indigo-500 text-gray-200;
   }
 
   .btn-text-secondary {
@@ -20,8 +28,29 @@
   }
 
   .elevated-card {
-    @apply bg-gray-200 dark:bg-gray-800 p-4 rounded-lg drop-shadow-lg;
+    @apply bg-gray-200 border border-gray-300 dark:border-0 dark:bg-gray-800 p-4 rounded-lg drop-shadow-lg;
   }
+
+  .selectable-item {
+    @apply m-2 p-2 rounded-md hover:bg-gray-300 hover:dark:bg-gray-500 ;
+  }
+
+  .pill {
+    @apply text-sm border border-indigo-400 text-indigo-700 dark:text-indigo-400 rounded-xl px-2 bg-indigo-400 bg-opacity-10 transition-colors ease-in duration-200 hover:text-indigo-500 hover:bg-indigo-700 hover:bg-opacity-30;
+  }
+  
+  .pill.active {
+    @apply text-sm border border-indigo-400 bg-indigo-500 text-gray-200 rounded-xl px-2 transition-colors ease-in duration-200;
+  }
+}
+
+input[type=file]::file-selector-button {
+  @apply btn-primary py-3;
+  border: none;
+  font-family: 'Lato', sans-serif;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background .2s ease-in-out;
 }
 
 html {
@@ -30,4 +59,12 @@ html {
 
 a {
   @apply text-indigo-500 dark:text-indigo-400 underline;
+}
+
+.no-select {
+  -khtml-user-select: none;
+  -o-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
 }

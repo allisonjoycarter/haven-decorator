@@ -37,7 +37,7 @@
     <div class="mb-8">
       <button 
         @click="selectRandom"
-        class="btn-primary fixed md:static z-20 bottom-6 right-8"
+        class="btn-primary sticky md:static z-20 bottom-6 right-8"
       >
         Shuffle
         <Icon name="fa:random" />
@@ -49,9 +49,8 @@
               v-for="(tabname, index) in tabs"
               :key="tabname"
               :class="{
-                'm-2': true,
-                'btn-text': index !== tab,
-                'py-2 px-1 rounded-md font-semibold bg-indigo-500 text-gray-200': index === tab
+                'm-2 btn-text': true,
+                'active': index === tab,
               }"
               @click="tab = index"
               >
@@ -129,6 +128,16 @@ import { ref, onMounted, computed } from "vue";
 import { AnonymousCredential, BlobServiceClient } from "@azure/storage-blob";
 import type { CustomSet } from "~/models/custom_set";
 import type { SunHavenImage } from "~/models/image";
+
+useSeoMeta({
+  title: 'Haven Decorator - Customizer',
+  ogTitle: 'Haven Decorator - Customizer',
+  description: 'Try out tier 3 house customizations from the Hardware Store!',
+  ogDescription: 'Try out tier 3 house customizations from the Hardware Store!',
+  ogImage: 'https://assets.havendecorator.com/decorations/sample_house.png',
+  twitterCard: 'summary',
+})
+
 
 const store = useCustomizationsStore()
 const blobURL =
