@@ -251,13 +251,21 @@
         plannerStore.setTileData({ map: props.mapName, tileData: data })
         plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value })
         hasPendingChanges.value = false
-      } else {
-        console.log("Nothing to save.")
       }
     }, 30000)
   })
 
   onUnmounted(() => {
+    const data = {} as any
+    tileData.value.forEach((entry) => {
+      if (entry.usedFor !== undefined) {
+        data[`${entry.x}-${entry.y}`] = entry
+      }
+    })
+    plannerStore.setTileData({ map: props.mapName, tileData: data })
+    plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value })
+    hasPendingChanges.value = false
+
     if (saveIntervalId !== undefined) {
       clearInterval(saveIntervalId)
     }
@@ -785,7 +793,9 @@
       }
     }
     subtileData.value = []
-    hasPendingChanges.value = true
+
+    plannerStore.setTileData({ map: props.mapName, tileData: {} })
+    plannerStore.setSubtileData({ map: props.mapName, subtileData: [] })
   }
 
 </script>

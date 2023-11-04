@@ -3,8 +3,10 @@
     <Notification 
       class="md:hidden"
       notificationId="mobile-planner-unavailable"
-      text="This planner is not supported on mobile yet. This is something that could be added in the future, but for now it will not function as expected on small devices."
-    />
+      :showClose="true"
+      >
+      <p>This planner is not supported on mobile yet. This is something that could be added in the future, but for now it will not function as expected on small devices.</p>
+    </Notification>
     <div class="flex flex-row gap-4 ml-4">
       <NuxtLink 
         v-for="(map, index) in plannerAreas"

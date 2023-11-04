@@ -21,10 +21,10 @@ export default defineNuxtPlugin(nuxtApp => {
       current_url: to.fullPath
     });
   });
-  
+
   return {
     provide: {
-      posthog: () => posthogClient
+      posthog: posthogClient
     }
   }
 })
