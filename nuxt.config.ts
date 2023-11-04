@@ -13,4 +13,10 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
+  runtimeConfig: {
+    public: {
+      posthogPublicKey: 'phc_pdfUOQFFBR8mzehV9TZmThswTqPcS2Tks0j6qkH4Va6',
+      posthogHost: 'https://app.posthog.com'
+    }
+  }
 })

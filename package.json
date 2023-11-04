@@ -24,6 +24,7 @@
   "dependencies": {
     "@azure/storage-blob": "^12.16.0",
     "@pinia/nuxt": "^0.5.1",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "posthog-js": "^1.88.1"
   }
 }

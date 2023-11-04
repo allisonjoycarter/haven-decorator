@@ -6,7 +6,8 @@
       <p class="mt-2">
         At Haven Decorator, accessible from havendecorator.com, one of our main priorities is the privacy of our visitors. As much as possible,
         all functionality of havendecorator.com is kept in your browser and avoids communicating with servers or third-parties. All data collected  
-        is completely vested in improving this website. Microsoft Azure is used for all/most hosting of services and images on this website.
+        is completely vested in improving this website. Microsoft Azure is used for all/most hosting of services and images on this website. Analytics
+        is collected using the open-source software <a href="https://posthog.com/" target="_blank">PostHog</a>.
         This Privacy Policy document contains types of information that is collected and recorded by Haven Decorator and how we use it.
       </p>
 
@@ -59,7 +60,6 @@
 
       <p class="mt-2 font-bold">Analytics Information Collected:</p>
       <ul class="list-disc ml-6">
-        <li>Location (City, Country)</li>
         <li>Device (mobile, desktop)</li> 
         <li>Operating System (windows, mac, android, etc)</li> 
         <li>Number of Sessions</li> 
@@ -68,7 +68,7 @@
         <li>Button Clicks</li> 
       </ul>
       <p class="mt-2">
-        This information is only used to improve the experience for those using Haven Decorator. Notably, the location information is something I have been working to exclude but have been unable to. I really don't want your location.
+        This information is only used to improve the experience for those using Haven Decorator.
          This information cannot identify a person unless personal data has been provided in form fields or inputs in the website.
       </p>
 
