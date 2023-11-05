@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col">
-    <input type="text"
+    <input type="text" v-focus
       class="p-2 rounded-md drop-shadow-lg
             border-2 border-gray-300 dark:border-gray-500
           bg-gray-100 dark:bg-gray-700 
@@ -48,7 +48,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, computed } from 'vue'
+  import { ref, computed } from 'vue'
 
   const props = defineProps<{
     category: string,
@@ -68,6 +68,12 @@
     }
     return props.previewOptions ?? [] as {name: string, image: string|undefined}[]
   })
+
+  const vFocus = {
+    mounted: (el: HTMLInputElement) => el.focus(),
+    created: (el: HTMLInputElement) => el.focus(),
+    updated: (el: HTMLInputElement) => el.focus()
+  }
 
   function selectOption(option: string) {
     emit('selected', option)

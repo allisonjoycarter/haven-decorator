@@ -1,99 +1,101 @@
 <template>
-  <div
-    class="fixed m-4 md:top-0 md:right-0 mobile:top-36 mobile:left-4 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4 drop-shadow-lg border border-gray-300 dark:border-gray-700"
-    @mouseenter="(event) => event.stopPropagation()" 
-    @mouseover="(event) => event.stopPropagation()"
-    @keydown.esc="openDropdown = ''"
-  >
-    <div class="flex flex-col">
-      <button 
-        class="btn-text text-sm py-1 my-1 text-left w-max"
-        @click="showMoreOptions = !showMoreOptions"
-      >
-        {{ showMoreOptions ? 'Hide' : 'Show' }} Options 
-        <Icon :class="{
-          'transition-transform duration-200': true,
-          'rotate-180': showMoreOptions
-        }" name="fa:angle-down"/>
-      </button>
-      <div :class="{
-        'flex flex-col transition-all overflow-hidden duration-200': true,
-        'max-h-0': !showMoreOptions,
-        'max-h-64': showMoreOptions
-      }">
-        <hr class="border-gray-400 opacity-80 dark:opacity-40 my-2"/>
-        <div class="flex flex-row gap-4 my-2">
-          <button class="btn-primary" @click="openSaveModal"><Icon name="fa:download"/>&nbsp;Save</button>
-          <button class="btn-primary" @click="openLoadModal"><Icon name="fa:upload"/>&nbsp;Load</button>
-          <button class="btn-danger" @click="startOver"><Icon name="fa:trash"/>&nbsp;Reset</button>
+  <div>
+    <div
+      class="fixed m-4 md:top-0 md:right-0 mobile:top-36 mobile:left-4 bg-gray-100 dark:bg-gray-900 rounded-md z-50 p-4 drop-shadow-lg border border-gray-300 dark:border-gray-700"
+      @mouseenter="(event) => event.stopPropagation()" 
+      @mouseover="(event) => event.stopPropagation()"
+      @keydown.esc="openDropdown = ''"
+    >
+      <div class="flex flex-col">
+        <button 
+          class="btn-text text-sm py-1 my-1 text-left w-max"
+          @click="showMoreOptions = !showMoreOptions"
+        >
+          {{ showMoreOptions ? 'Hide' : 'Show' }} Options 
+          <Icon :class="{
+            'transition-transform duration-200': true,
+            'rotate-180': showMoreOptions
+          }" name="fa:angle-down"/>
+        </button>
+        <div :class="{
+          'flex flex-col transition-all overflow-hidden duration-200': true,
+          'max-h-0': !showMoreOptions,
+          'max-h-64': showMoreOptions
+        }">
+          <hr class="border-gray-400 opacity-80 dark:opacity-40 my-2"/>
+          <div class="flex flex-row gap-4 my-2">
+            <button class="btn-primary" @click="openSaveModal"><Icon name="fa:download"/>&nbsp;Save</button>
+            <button class="btn-primary" @click="openLoadModal"><Icon name="fa:upload"/>&nbsp;Load</button>
+            <button class="btn-danger" @click="startOver"><Icon name="fa:trash"/>&nbsp;Reset</button>
+          </div>
+          <label class="text-xs">Grid Opacity</label>
+          <Slider
+            :min="0"
+            :max="60"
+            @slider-changed="updateGridOpacity"
+          />
         </div>
-        <label class="text-xs">Grid Opacity</label>
-        <Slider
-          :min="0"
-          :max="60"
-          @slider-changed="updateGridOpacity"
+        <hr class="border-gray-400 opacity-80 dark:opacity-40 my-2"/>
+        <div class="flex flex-row border border-indigo-500 rounded-md my-1 justify-between">
+          <button
+            v-for="item in dropdowns"
+            :class="{
+              'btn-text px-2': true,
+              'active': openDropdown === item && !shouldCloseDropdown,
+            }"
+            @click="() => openDropdown === item ? openDropdown = '' : openDropdown = item"
+          >
+            {{ item }}s
+          </button>
+        </div>
+        <Autocomplete
+          v-if="openDropdown === 'Building' && !shouldCloseDropdown"
+          category="Buildings"
+          :options="buildingOptions"
+          :preview-options="buildingOptions.slice(0, 5)"
+          :has-more-options="true"
+          placeholder="Search Buildings"
+          @selected="selected"
+        >
+        </Autocomplete>
+        <Autocomplete
+          v-if="openDropdown === 'Crop' && !shouldCloseDropdown"
+          category="Crops"
+          :options="cropOptions"
+          :preview-options="cropOptions.slice(0, 5)"
+          :has-more-options="true"
+          placeholder="Search Crops"
+          @selected="selected"
+        />
+        <Autocomplete
+          v-if="openDropdown === 'Path' && !shouldCloseDropdown"
+          category="Paths"
+          :options="pathOptions"
+          :preview-options="pathOptions.slice(0, 5)"
+          :has-more-options="true"
+          placeholder="Search Paths"
+          @selected="selected"
+        />
+        <Autocomplete
+          v-if="openDropdown === 'Tree' && !shouldCloseDropdown"
+          category="Trees"
+          :options="treeOptions"
+          :preview-options="treeOptions.slice(0, 5)"
+          :has-more-options="true"
+          placeholder="Search Trees"
+          @selected="selected"
+        />
+        <Autocomplete
+          v-if="openDropdown === 'Crafting Table' && !shouldCloseDropdown"
+          category="Crafting Tables"
+          :options="craftingTableOptions"
+          :preview-options="craftingTableOptions.slice(0, 5)"
+          :has-more-options="true"
+          placeholder="Search Crafting"
+          @selected="selected"
         />
       </div>
-      <hr class="border-gray-400 opacity-80 dark:opacity-40 my-2"/>
-      <div class="flex flex-row border border-indigo-500 rounded-md my-1 justify-between">
-        <button
-          v-for="item in dropdowns"
-          :class="{
-            'btn-text px-2': true,
-            'active': openDropdown === item && !shouldCloseDropdown,
-          }"
-          @click="() => openDropdown === item ? openDropdown = '' : openDropdown = item"
-        >
-          {{ item }}s
-        </button>
-      </div>
-      <Autocomplete
-        v-show="openDropdown === 'Building' && !shouldCloseDropdown"
-        category="Buildings"
-        :options="buildingOptions"
-        :preview-options="buildingOptions.slice(0, 5)"
-        :has-more-options="true"
-        placeholder="Search Buildings"
-        @selected="selected"
-      >
-      </Autocomplete>
-      <Autocomplete
-        v-show="openDropdown === 'Crop' && !shouldCloseDropdown"
-        category="Crops"
-        :options="cropOptions"
-        :preview-options="cropOptions.slice(0, 5)"
-        :has-more-options="true"
-        placeholder="Search Crops"
-        @selected="selected"
-      />
-      <Autocomplete
-        v-show="openDropdown === 'Path' && !shouldCloseDropdown"
-        category="Paths"
-        :options="pathOptions"
-        :preview-options="pathOptions.slice(0, 5)"
-        :has-more-options="true"
-        placeholder="Search Paths"
-        @selected="selected"
-      />
-      <Autocomplete
-        v-show="openDropdown === 'Tree' && !shouldCloseDropdown"
-        category="Trees"
-        :options="treeOptions"
-        :preview-options="treeOptions.slice(0, 5)"
-        :has-more-options="true"
-        placeholder="Search Trees"
-        @selected="selected"
-      />
-      <Autocomplete
-        v-show="openDropdown === 'Crafting Table' && !shouldCloseDropdown"
-        category="Crafting Tables"
-        :options="craftingTableOptions"
-        :preview-options="craftingTableOptions.slice(0, 5)"
-        :has-more-options="true"
-        placeholder="Search Crafting"
-        @selected="selected"
-      />
-      
+    </div>
     <PlannerSaveModal
       v-show="isSaveModalOpen"
       @on-save-image="saveAsImage"
@@ -105,10 +107,9 @@
     </PlannerSaveModal>
     <PlannerLoadModal
       v-if="isLoadModalOpen && canShowLoadModal"
-      @close="isLoadModalOpen = false"
+      @on-close="isLoadModalOpen = false"
       @on-file-selected="loadFromFile"
     ></PlannerLoadModal>
-    </div>
   </div>
 </template>
 

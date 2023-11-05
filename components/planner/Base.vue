@@ -35,7 +35,8 @@
         :is-load-complete="isLoadComplete"
         :should-close-dropdown="shouldCloseDropdown"
         @mouseenter="shouldCloseDropdown = false"
-        @keydown="(event) => event.stopPropagation()"
+        @mousedown="(event: any) => event.stopPropagation()"
+        @keydown="(event: any) => event.stopPropagation()"
         @contextmenu="(event: any) => event.stopPropagation()"
       >
         <div style="height: 600px" class="overflow-scroll">
@@ -96,7 +97,7 @@
           </div>
           <div ref="tilesContainer">
           <div
-            v-for="(position, index) in tileData.values()" :key="index" 
+            v-for="(position, index) in populatedTiles" :key="index" 
             :style="'position: absolute; top: ' + (position.y - 11) + 'px; left: ' + (position.x - 11) + 'px;'"
             class="tile"
             >
@@ -190,6 +191,10 @@
   let saveIntervalId: undefined|NodeJS.Timeout = undefined
   const hasPendingChanges = ref(false)
 
+  const populatedTiles = computed(() => {
+    return [...tileData.value.values()].filter((tile: PlaceableTile) => tile.usedFor !== undefined);
+  })
+
   const showMouseIndicator = computed(() => {
     return isHoveringPlanner.value && (isPlacing.value === undefined || placeOnDragEnd.value !== undefined)
   })
@@ -225,7 +230,6 @@
           x: x,
           y: y,
           outOfBounds: false,
-          isDragged: false,
           usedFor: undefined,
         })
       }
@@ -375,7 +379,6 @@
             x: x,
             y: y,
             outOfBounds: false,
-            isDragged: false,
             usedFor: undefined,
           })
         }
@@ -442,8 +445,8 @@
     }
   }
 
-  function handleDragEnd(event: MouseEvent|undefined) {
-    if (placeOnDragEnd.value !== undefined || isDraggingToErase.value) {
+  function handleDragEnd(event: MouseEvent) {
+    if (isDragging.value && (placeOnDragEnd.value !== undefined || isDraggingToErase.value)) {
       // Store for undo
       canUndo.value = true
       previousTileData.value = new Map()
@@ -473,9 +476,9 @@
             })
             
             if (placeOnDragEnd.value !== undefined) {
-              tileData.value.get(`${tile.x}-${tile.y}`).usedFor = placeOnDragEnd.value
+              tileData.value.get(`${tile.x}-${tile.y}`)!!.usedFor = placeOnDragEnd.value
             } else {
-              tileData.value.get(`${tile.x}-${tile.y}`).usedFor = undefined
+              tileData.value.get(`${tile.x}-${tile.y}`)!!.usedFor = undefined
             }
             
             if (placeOnDragEnd.value === undefined || !placeOnDragEnd.value.includes("Path")) {
@@ -679,7 +682,7 @@
     for (let x = position.x; x < position.x + (tileWidth*24); x+=24) {
       for (let y = position.y - (tileHeight*24) + 24; y < position.y + 24; y+=24) {
         if (tileData.value.has(`${x}-${y}`)) {
-          if (tileData.value.get(`${x}-${y}`).usedFor == undefined || !tileData.value.get(`${x}-${y}`).usedFor.includes("Path")) {
+          if (tileData.value.get(`${x}-${y}`)!!.usedFor == undefined || !tileData.value.get(`${x}-${y}`)!!.usedFor!!.includes("Path")) {
             coveredTiles.push(`${x}-${y}`)
           }
         }
@@ -821,14 +824,13 @@
           x: x,
           y: y,
           outOfBounds: true,
-          isDragged: false,
           usedFor: undefined,
         })
       }
     }
     subtileData.value = []
 
-    plannerStore.setTileData({ map: props.mapName, tileData: {} })
+    plannerStore.setTileData({ map: props.mapName, tileData: new Map<string, PlaceableTile>() })
     plannerStore.setSubtileData({ map: props.mapName, subtileData: [] })
   }
 
