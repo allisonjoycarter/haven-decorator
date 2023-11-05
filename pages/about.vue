@@ -29,22 +29,32 @@
         <div class="mx-auto">
           <h3 class="text-xl font-semibold">Data</h3>
           <p>
-            All saved data is stored locally in your browser. If you encounter any strange behavior or issues on the website, clearing this data is a good remedy. To delete these, look for an option to "Clear Site Data" or clear your local storage.
+            All saved data is stored locally in your browser, or saved to a file if using the planner. If you encounter any strange behavior or issues on the website, clearing this data is a good remedy. 
+            To delete these, look for an option to "Clear Site Data" or clear your local storage. Besides analytics events, no data is sent to any server. 
           </p>
         </div>
       </div>
-      
-        <div>
-          <div class="my-4 elevated-card">
-            <h3 class="text-xl font-semibold">Analytics</h3>
-            <div>
-              This website collects data to track page views, button clicks, and other relevant data to 
-              understand usage and performance. We use PostHog to track this data so we can 
-              improve this website. To see more details, go to the <a href="/privacy-policy">Privacy Policy</a>. 
-              For questions about this policy, contact doubleterrainbow@gmail.com  
-            </div>
+      <div>
+        <div class="my-4 elevated-card">
+          <h3 class="text-xl font-semibold">Cookies</h3>
+          <div>
+            Cookies are used to determine whether people are returning to the website or only using it once 
+            and never again. The cookie contains a random identifier and some device information (i.e. mobile or desktop).
+            This does NOT gather personal or identifying information, and only communicates the amount of returning users. 
           </div>
         </div>
+      </div>
+      <div>
+        <div class="my-4 elevated-card">
+          <h3 class="text-xl font-semibold">Analytics</h3>
+          <div>
+            This website collects data to track page views, button clicks, and other relevant information to 
+            understand usage and performance. We use PostHog to track this data so we can 
+            improve this website. To see more details, go to the <a href="/privacy-policy">Privacy Policy</a>. 
+            For questions about this policy, contact doubleterrainbow@gmail.com  
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

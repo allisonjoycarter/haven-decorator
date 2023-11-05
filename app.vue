@@ -8,7 +8,8 @@
       >
       <div class="flex flex-col mx-auto p-4 gap-2">
         <p>
-          We use tracking cookies to improve this website. And by we, I mean me. I just want to know what the most used parts of this website are.
+          We use tracking cookies to improve this website. This contains a random identifier to tell us 
+          whether people return to the website or hate it and never visit again. To learn more, visit <NuxtLink to="/about">about</NuxtLink>.
         </p>
         <button class="btn-primary" @click="acceptCookies">Accept Cookies</button>
         <button class="btn-text" @click="declineCookies">Decline Cookies</button>
