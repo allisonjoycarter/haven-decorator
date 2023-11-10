@@ -2,7 +2,7 @@
   <canvas
     ref="itemCanvas"
     :width="visibleWidth"
-    height=250
+    height=190
     class="no-select"
   />
 </template>

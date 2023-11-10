@@ -67,10 +67,14 @@
           class="absolute z-50"
           ref="placingItem"
         >
-        <img
-          :style="'max-width: unset;'"
-          :width="placingImageWidth"
-          :src="'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + isPlacing + '.png'"/>
+        <div class="relative">
+          <div class="border-2 border-dashed border-rose-500 absolute top-0 bottom-0" :style="'opacity: ' + (gridOpacity / 100 * 3) + '; width: ' + placingWidth + 'px; height: ' + placingHeight + 'px; '"></div>
+          <img
+            :style="'max-width: unset; bottom: -' + placingHeight + 'px;'"
+            class="absolute left-0"
+            :width="placingImageWidth"
+            :src="'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + isPlacing + '.png'"/>
+        </div>
       </div>
       <div class="absolute top-0 left-0 overflow-hidden z-30" :style="fullSizeStyle">
         <div v-show="showMouseIndicator" ref="mouseIndicator" class="absolute">
@@ -104,19 +108,24 @@
                 'grayscale contrast-200': subtilesWillBeErased.includes(item.id)
               }"
             >
-            <PlannerCustomHouse
-              v-if="item.houseCustomizationData !== undefined"
-              :visible-width="item.visibleWidth"
-              :customizations="item.houseCustomizationData"
-              class="no-select"
-            />
-            <img
-              v-else
-              :width="item.visibleWidth"
-              :style="'max-width: unset;'"
-              class="no-select"
-              :src="item.overrideImage ?? 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + item.itemName + '.png'"/>
+            <div class="relative">
+              <div class="border-2 border-dashed border-rose-500 absolute top-0 bottom-0" :style="'opacity: ' + (gridOpacity / 100 * 3) + '; width: ' + item.collidableWidth + 'px; height: ' + item.collidableHeight + 'px; '"></div>
+              <PlannerCustomHouse
+                v-if="item.houseCustomizationData !== undefined"
+                :visible-width="item.visibleWidth"
+                :customizations="item.houseCustomizationData"
+                class="no-select absolute"
+                :style="'bottom: -' + item.collidableHeight + 'px;'"
+              />
+              <img
+                v-else
+                :width="item.visibleWidth"
+                :style="'max-width: unset; bottom: -' + item.collidableHeight + 'px;'"
+                class="no-select absolute"
+                :src="item.overrideImage ?? 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + item.itemName + '.png'"/>
+              </div>
             </div>
+
           </div>
           <div ref="tilesContainer">
           <div
@@ -213,6 +222,7 @@
   const shedSkinsAndImages = ref([] as any[])
 
   // Main data stored here
+  const dataVersion = ref(2)
   const tileData = ref(new Map<string, PlaceableTile>())
   const subtileData = ref([] as PlacedItem[])
 
@@ -246,6 +256,14 @@
 
   const placingImageWidth = computed(() => {
     return placingDimensions.value === undefined ? undefined : (placingDimensions.value.visible_x * 4)
+  })
+
+  const placingWidth = computed(() => {
+    return placingDimensions.value === undefined ? undefined : (placingDimensions.value.placement_x * 4)
+  })
+
+  const placingHeight = computed(() => {
+    return placingDimensions.value === undefined ? undefined : (placingDimensions.value.placement_y * 4)
   })
 
   onMounted(() => {
@@ -290,7 +308,8 @@
           }
         })
         plannerStore.setTileData({ map: props.mapName, tileData: data })
-        plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value })
+        plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value, version: dataVersion.value })
+        
         hasPendingChanges.value = false
       }
     }, 10000)
@@ -304,7 +323,7 @@
       }
     })
     plannerStore.setTileData({ map: props.mapName, tileData: data })
-    plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value })
+    plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value, version: dataVersion.value })
     hasPendingChanges.value = false
 
     if (saveIntervalId !== undefined) {
@@ -341,6 +360,7 @@
   function saveAsFile() {
     let data = {
       base: props.mapName,
+      version: 2,
       tileData: {} as any,
       subtileData: subtileData.value,
     }
@@ -432,7 +452,10 @@
         emit('goToMap', result.base)
       }
 
-      subtileData.value = result.subtileData
+      // TODO: update version number when changing image placements
+      if (result.version !== 2) {
+        plannerStore.migrateSubtileData(props.mapName, result.subtileData, 2, undefined)
+      }
 
       Object.values(result.tileData).forEach((entry: any) => {
         tileData.value.set(`${entry.x}-${entry.y}`, entry)
@@ -530,6 +553,7 @@
         y: event.pageY - marginTop.value
       }
       
+      console.log("Clickpos", clickPos)
       for (let i = 0; i < subtileData.value.length; i++) {
         const subtile = subtileData.value[i];
         if (clickPos.x >= subtile.xStart
@@ -538,14 +562,13 @@
           && clickPos.y <= subtile.yEnd) {
             isContextMenuOpen.value = true
 
-            const isCloseToBottom = event.pageY + 300 > window.innerHeight
+            const isCloseToBottom = event.pageY - window.scrollY + 300 > window.innerHeight
             const verticalStyle = isCloseToBottom ? `bottom: ${window.innerHeight - event.pageY}px;` : `top: ${event.pageY - window.scrollY - marginTop.value + 150}px;`
             
-            const isCloseToSide = event.pageX + 300 > window.innerWidth
+            const isCloseToSide = event.pageX - window.scrollX + 300 > window.innerWidth
             const horizontalStyle = isCloseToSide ? `right: ${150}px;` : `left: ${event.pageX - marginLeft.value - window.scrollX + 20}px;`
 
             contextMenuStyle.value = `${verticalStyle} ${horizontalStyle}`
-            console.log("Context menu on", subtile.itemName)
 
             if (subtile.itemName.includes("House")) {
               contextMenuOptions.value = [
@@ -898,6 +921,7 @@
   } 
 
   function handleKeyPress(event: KeyboardEvent) {
+    isContextMenuOpen.value = false
     if (event.ctrlKey && event.key === 'z') {
       if (canUndo.value) {
         undo()
@@ -957,7 +981,7 @@
     subtileData.value = []
 
     plannerStore.setTileData({ map: props.mapName, tileData: new Map<string, PlaceableTile>() })
-    plannerStore.setSubtileData({ map: props.mapName, subtileData: [] })
+    plannerStore.setSubtileData({ map: props.mapName, subtileData: [], version: dataVersion.value })
   }
 
 </script>
