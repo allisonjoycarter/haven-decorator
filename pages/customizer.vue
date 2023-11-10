@@ -134,7 +134,7 @@ useSeoMeta({
   ogTitle: 'Customizer - Haven Decorator',
   description: 'Try out tier 3 house customizations from the Hardware Store!',
   ogDescription: 'Try out tier 3 house customizations from the Hardware Store!',
-  ogImage: 'https://assets.havendecorator.com/decorations/sample_house.png',
+  ogImage: 'https://farmdecoratorassets.blob.core.windows.net/decorations/sample_house.png',
   twitterCard: 'summary',
 })
 

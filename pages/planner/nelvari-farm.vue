@@ -4,8 +4,8 @@
     <PlannerBase
       map-name="NelVari Farm"
       :is-farm="true"
-      background-image="https://assets.havendecorator.com/decorations/Planner/Maps/NelVariFarm.png"
-      background-grid-image="https://assets.havendecorator.com/decorations/Planner/Maps/NelVariFarmGrid.png"
+      background-image="https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Maps/NelVariFarm.png"
+      background-grid-image="https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Maps/NelVariFarmGrid.png"
       :image-height="1340"
       :image-width="1890"
       :grid-offset-top="-4"

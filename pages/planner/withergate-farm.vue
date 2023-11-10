@@ -4,8 +4,8 @@
     <PlannerBase
       map-name="Withergate Farm"
       :is-farm="true"
-      background-image="https://assets.havendecorator.com/decorations/Planner/Maps/WithergateFullFarm.png"
-      background-grid-image="https://assets.havendecorator.com/decorations/Planner/Maps/WithergateFullFarmGrid.png"
+      background-image="https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Maps/WithergateFullFarm.png"
+      background-grid-image="https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Maps/WithergateFullFarmGrid.png"
       :image-height="1212"
       :image-width="1644"
       :grid-offset-top="14"

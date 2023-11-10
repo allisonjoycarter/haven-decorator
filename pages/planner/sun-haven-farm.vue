@@ -4,8 +4,8 @@
     <PlannerBase
       map-name="Sun Haven Farm"
       :is-farm="true"
-      background-image="https://assets.havendecorator.com/decorations/sun_haven_farm_smaller.png"
-      background-grid-image="https://assets.havendecorator.com/decorations/sun_haven_farm_smaller_grid.png"
+      background-image="https://farmdecoratorassets.blob.core.windows.net/decorations/sun_haven_farm_smaller.png"
+      background-grid-image="https://farmdecoratorassets.blob.core.windows.net/decorations/sun_haven_farm_smaller_grid.png"
       :image-height="2008"
       :image-width="1868"
       :grid-offset-top="1"

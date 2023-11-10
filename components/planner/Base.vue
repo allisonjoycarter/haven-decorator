@@ -54,7 +54,7 @@
         <img
           :style="'max-width: unset;'"
           :width="placingImageWidth"
-          :src="'https://assets.havendecorator.com/decorations/Planner/' + isPlacing + '.png'"/>
+          :src="'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + isPlacing + '.png'"/>
       </div>
       <div class="absolute top-0 left-0 overflow-hidden z-30" :style="fullSizeStyle">
         <div v-show="showMouseIndicator" ref="mouseIndicator" class="absolute">
@@ -92,7 +92,7 @@
                 :width="item.visibleWidth"
                 :style="'max-width: unset;'"
                 class="no-select"
-                :src="'https://assets.havendecorator.com/decorations/Planner/' + item.itemName + '.png'"/>
+                :src="'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + item.itemName + '.png'"/>
             </div>
           </div>
           <div ref="tilesContainer">
@@ -113,7 +113,7 @@
                   'grayscale contrast-200': willBeErased.includes(`${position.x}-${position.y}`),
                 }"
                 style="max-width: unset;"
-                :src="'https://assets.havendecorator.com/decorations/Planner/' + position.usedFor + '.png'"/>
+                :src="'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + position.usedFor + '.png'"/>
             </div>
           </div>
         </div>
@@ -344,7 +344,7 @@
       tileData.value.forEach((tile) => {
         if (tile.usedFor !== undefined) {
           const itemImage = new Image()
-          itemImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + tile.usedFor + '.png'
+          itemImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + tile.usedFor + '.png'
           itemImage.onload = function() {
             context.drawImage(itemImage, tile.x - 11, tile.y - 11)
           }
@@ -353,7 +353,7 @@
 
       subtileData.value.forEach((item) => {
         const decoImage = new Image()
-        decoImage.src = 'https://assets.havendecorator.com/decorations/Planner/' + item.itemName + '.png'
+        decoImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + item.itemName + '.png'
         decoImage.onload = function() {
           context.drawImage(
             decoImage,

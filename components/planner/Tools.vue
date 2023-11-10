@@ -115,6 +115,7 @@
 
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue'
+  import { buildings, crops, craftingTables, trees } from '~/models/planner_items'
   import axios from 'axios'
 
   const props = defineProps<{
@@ -147,10 +148,6 @@
 
   const farmDropdowns = ['Building', 'Crop', 'Path', 'Crafting Table', 'Tree']
   const buildingDropdowns = ['Crafting Table']
-  const buildings = ref([] as string[])
-  const crops = ref([] as string[])
-  const craftingTables = ref([] as string[])
-  const trees = ref([] as string[])
   const paths = [
     'Brick',
     'Oak Plank',
@@ -167,28 +164,28 @@
   const dropdowns = computed(() => props.isFarm ? farmDropdowns : buildingDropdowns)
 
   const buildingOptions = computed(() => {
-    return buildings.value.map((building) => {
+    return buildings.map((building) => {
       return {
         name: building,
-        image: 'https://assets.havendecorator.com/decorations/Planner/Buildings/' + building + '.png'
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Buildings/' + building + '.png'
       }
     })
   })
 
   const cropOptions = computed(() => {
-    return crops.value.map((crop) => {
+    return crops.map((crop) => {
       return {
         name: crop,
-        image: 'https://assets.havendecorator.com/decorations/Planner/Crops/' + crop + '.png'
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crops/' + crop + '.png'
       }
     })
   })
 
   const craftingTableOptions = computed(() => {
-    return craftingTables.value.map((path) => {
+    return craftingTables.map((path) => {
       return {
         name: path,
-        image: 'https://assets.havendecorator.com/decorations/Planner/Crafting/' + path + '.png'
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/' + path + '.png'
       }
     })
   })
@@ -197,16 +194,16 @@
     return paths.map((path) => {
       return {
         name: path,
-        image: 'https://assets.havendecorator.com/decorations/Planner/Paths/' + path + '.png'
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Paths/' + path + '.png'
       }
     })
   })
 
   const treeOptions = computed(() => {
-    return trees.value.map((path) => {
+    return trees.map((path) => {
       return {
         name: path,
-        image: 'https://assets.havendecorator.com/decorations/Planner/Trees/' + path + '.png'
+        image: 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Trees/' + path + '.png'
       }
     })
   })
@@ -216,33 +213,18 @@
   })
 
   onMounted(() => {
-    axios.get("https://assets.havendecorator.com/decorations/Planner/Crops/list.txt").then((result) => {
-      crops.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
-    })
-
-    axios.get("https://assets.havendecorator.com/decorations/Planner/Buildings/building_names.txt").then((result) => {
-      buildings.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
-    })
-
-    axios.get("https://assets.havendecorator.com/decorations/Planner/Crafting/list.txt").then((result) => {
-      craftingTables.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
-    })
-
-    axios.get("https://assets.havendecorator.com/decorations/Planner/Trees/list.txt").then((result) => {
-      trees.value = result.data.split('\n').map((name: string) => name.trim()).filter((i: string) => i !== '')
-    })
   })
   
   function selected(option: string) {
-    if (crops.value.includes(option)) {
+    if (crops.includes(option)) {
       emit('selectedCrop', option)
-    } else if (buildings.value.includes(option)) {
+    } else if (buildings.includes(option)) {
       emit('selectedBuilding', option)
     } else if (paths.includes(option)) {
       emit('selectedPath', option)
-    } else if (craftingTables.value.includes(option)) {
+    } else if (craftingTables.includes(option)) {
       emit('selectedCrafting', option)
-    } else if (trees.value.includes(option)) {
+    } else if (trees.includes(option)) {
       emit('selectedTree', option)
     }
     openDropdown.value = ''

@@ -4,8 +4,8 @@
     <PlannerBase
       map-name="Workshop"
       :is-farm="false"
-      background-image="https://assets.havendecorator.com/decorations/Planner/Maps/WorkshopMap.png"
-      background-grid-image="https://assets.havendecorator.com/decorations/Planner/Maps/WorkshopMapGrid.png"
+      background-image="https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Maps/WorkshopMap.png"
+      background-grid-image="https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Maps/WorkshopMapGrid.png"
       :image-height="429"
       :image-width="659"
       :grid-offset-top="0"
