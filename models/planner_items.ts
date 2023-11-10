@@ -181,3 +181,18 @@ export const trees = [
   'Sour Plum Tree',
   'Sugar Plum Tree'
 ] 
+
+export const shedSkins = [
+  'Basic Shed',
+  'TV Shed',
+  'Tree Stump Shed',
+  'Stein Shed',
+  'Pumpkin Shed',
+  'Night Club Shed',
+  'Mushroom Shed',
+  'Ghost Shed',
+  'Carnival Shed',
+  'Cake Shed',
+  'Bee Hive Shed',
+  'Elven Stone Shed'
+]

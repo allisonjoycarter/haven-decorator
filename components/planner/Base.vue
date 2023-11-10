@@ -18,6 +18,22 @@
           <p class="text-lg mt-2 ml-4">Loading...</p>
         </div>
       </div>
+      <AutocompleteModal 
+        v-if="isSelectingShedSkin"
+        title="Shed Skins"
+        :items="shedSkinsAndImages"
+        @clicked-outside-modal="isSelectingShedSkin = false"
+        @select-item="setShedSkin"
+      />
+      <PlannerContextMenu 
+      v-show="isContextMenuOpen"
+      :style="contextMenuStyle"
+      :options="contextMenuOptions"
+      @on-select-option="onSelectContextOption"
+      @mousedown="(event: any) => event.stopPropagation()"
+      @keydown="(event: any) => event.stopPropagation()"
+      @contextmenu="(event: any) => event.stopPropagation()"
+      />
       <PlannerTools
         @selected-building="grabBuilding"
         @selected-crafting="grabCrafting"
@@ -88,11 +104,18 @@
                 'grayscale contrast-200': subtilesWillBeErased.includes(item.id)
               }"
             >
+            <PlannerCustomHouse
+              v-if="item.houseCustomizationData !== undefined"
+              :visible-width="item.visibleWidth"
+              :customizations="item.houseCustomizationData"
+              class="no-select"
+            />
             <img
-                :width="item.visibleWidth"
-                :style="'max-width: unset;'"
-                class="no-select"
-                :src="'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + item.itemName + '.png'"/>
+              v-else
+              :width="item.visibleWidth"
+              :style="'max-width: unset;'"
+              class="no-select"
+              :src="item.overrideImage ?? 'https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/' + item.itemName + '.png'"/>
             </div>
           </div>
           <div ref="tilesContainer">
@@ -127,6 +150,7 @@
   import { ref, onMounted, onUnmounted, computed } from 'vue'
   import type PlaceableItem from '~/models/placeable_item';
   import type { PlacedItem } from '~/models/placed_item';
+  import { shedSkins } from '~/models/planner_items';
 
   const props = defineProps<{
     mapName: string,
@@ -142,10 +166,18 @@
   }>()
   const emit = defineEmits(['goToMap'])
   const plannerStore = usePlannerStore()
+  const customizationStore = useCustomizationsStore()
 
   const isLoading = ref(true)
   const isHoveringPlanner = ref(false)
+  const isSelectingShedSkin = ref(false)
   const shouldCloseDropdown = ref(false)
+
+  // On right click, use these options
+  const isContextMenuOpen = ref(false)
+  const contextMenuStyle = ref('')
+  const contextMenuOptions = ref([] as { name: string, icon?: string }[])
+  const contextMenuItemIndex = ref(-1)
   
   const planner = ref(null as null|HTMLElement)
   const plannerArea = ref(null as null|HTMLElement)
@@ -167,7 +199,6 @@
   const dragStart = ref({x: 0, y: 0})
   const dragEnd = ref({x: 0, y: 0})
   const dragAmount = ref({x: 0, y: 0})
-  const draggedTiles = ref([] as string[])
 
   const isPlacing = ref(undefined as string|undefined)
   const placingItem = ref(null as null|HTMLElement)
@@ -176,8 +207,10 @@
   const subtilesWillBeErased = ref([] as string[])
   const willBeErased = ref([] as string[])
 
+  // Game-relevant data retrieved from Blob storage
   const buildingSizes = ref([] as PlaceableItem[])
   const craftingTableSizes = ref([] as PlaceableItem[])
+  const shedSkinsAndImages = ref([] as any[])
 
   // Main data stored here
   const tileData = ref(new Map<string, PlaceableTile>())
@@ -217,6 +250,7 @@
 
   onMounted(() => {
     fetchSizes()
+    fetchShedSkins()
 
     if (plannerArea.value !== null) {
       const rect = (plannerArea.value as HTMLElement).getBoundingClientRect() 
@@ -259,7 +293,7 @@
         plannerStore.setSubtileData({ map: props.mapName, subtileData: subtileData.value })
         hasPendingChanges.value = false
       }
-    }, 30000)
+    }, 10000)
   })
 
   onUnmounted(() => {
@@ -285,6 +319,15 @@
 
     axios.get('https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/Crafting/crafting_table_sizes.json').then((result) => {
       craftingTableSizes.value = result.data.sizes
+    })
+  }
+
+  function fetchShedSkins() {
+    shedSkins.forEach((skin: string) => {
+      shedSkinsAndImages.value.push({
+        name: skin.trim(),
+        image: `https://farmdecoratorassets.blob.core.windows.net/decorations/Planner/ShedSkins/${skin.trim()}.png` 
+      })
     })
   }
 
@@ -404,9 +447,57 @@
     gridOpacity.value = Math.ceil(opacity / 10) * 10
   }
 
+  async function onSelectContextOption(option: string) {
+    if (option === 'Delete') {
+      subtileData.value.splice(contextMenuItemIndex.value, 1)
+      contextMenuItemIndex.value = -1
+    } else if (option === 'Apply Customization') {
+      if (customizationStore.currentSet === undefined) {
+        if (customizationStore.savedSets.length > 0) {
+          customizationStore.updateCurrentSet(customizationStore.savedSets[0])
+        } else {
+          customizationStore.updateCurrentSet({
+            name: undefined,
+            roof: { nameInGame: 'Rickity', filename: 'RickityRoof3.png'},
+            walls: { nameInGame: 'Rickity', filename: 'RickityWalls3.png'},
+            windows: { nameInGame: 'Rickity', filename: 'RickityWindows3.png'},
+            door: { nameInGame: 'Rickity', filename: 'RickityDoor3.png'},
+            patio: { nameInGame: 'Rickity', filename: 'RickityPatio3.png'},
+          })
+        }
+      }
+
+      // Setting to undefined first triggers the reactivity, forcing the DOM to update.
+      subtileData.value[contextMenuItemIndex.value].houseCustomizationData = undefined
+      await nextTick()
+
+      subtileData.value[contextMenuItemIndex.value].houseCustomizationData = {...customizationStore.currentSet}
+      hasPendingChanges.value = true
+      contextMenuItemIndex.value = -1
+    } else if (option === 'Set Skin') {
+      isSelectingShedSkin.value = true
+    }
+
+    isContextMenuOpen.value = false
+  }
+
+  async function setShedSkin(skin: string) {
+    console.log(contextMenuItemIndex.value)
+
+    // Setting to undefined first triggers the reactivity, forcing the DOM to update.
+    subtileData.value[contextMenuItemIndex.value].overrideImage = undefined
+    await nextTick()
+
+    subtileData.value[contextMenuItemIndex.value].overrideImage = shedSkinsAndImages.value.find((option) => option.name === skin).image
+    contextMenuItemIndex.value = -1
+    isSelectingShedSkin.value = false
+  }
+
   function handleMapClick(event: MouseEvent) {
     if (event.buttons === 1) {
-      if (isPlacing.value === undefined || placeOnDragEnd.value !== undefined) {
+      if (isContextMenuOpen.value) {
+        isContextMenuOpen.value = false
+      } else if (isPlacing.value === undefined || placeOnDragEnd.value !== undefined) {
         isDragging.value = true
 
         const startingTile = getTilePositionAt(
@@ -428,20 +519,66 @@
       }
     } else if (event.buttons === 2) {
       event.preventDefault()
+      isContextMenuOpen.value = false
       if (isPlacing.value !== undefined) {
         isPlacing.value = undefined
         placeOnDragEnd.value = undefined
-      } 
+      }
 
-      const startingTile = getTilePositionAt(
-          event.pageX - marginLeft.value,
-          event.pageY - marginTop.value
-      )
-      dragStart.value = { x: startingTile.x, y: startingTile.y }
+      const clickPos = {
+        x: event.pageX - marginLeft.value,
+        y: event.pageY - marginTop.value
+      }
+      
+      for (let i = 0; i < subtileData.value.length; i++) {
+        const subtile = subtileData.value[i];
+        if (clickPos.x >= subtile.xStart
+          && clickPos.x <= subtile.xEnd
+          && clickPos.y >= subtile.yStart
+          && clickPos.y <= subtile.yEnd) {
+            isContextMenuOpen.value = true
 
-      isDragging.value = true
-      isDraggingToErase.value = true
-      handleMouseOverMap(event)
+            const isCloseToBottom = event.pageY + 300 > window.innerHeight
+            const verticalStyle = isCloseToBottom ? `bottom: ${window.innerHeight - event.pageY}px;` : `top: ${event.pageY - window.scrollY - marginTop.value + 150}px;`
+            
+            const isCloseToSide = event.pageX + 300 > window.innerWidth
+            const horizontalStyle = isCloseToSide ? `right: ${150}px;` : `left: ${event.pageX - marginLeft.value - window.scrollX + 20}px;`
+
+            contextMenuStyle.value = `${verticalStyle} ${horizontalStyle}`
+            console.log("Context menu on", subtile.itemName)
+
+            if (subtile.itemName.includes("House")) {
+              contextMenuOptions.value = [
+                { name: 'Apply Customization', icon: 'fa:paint-brush' },
+                { name: 'Delete', icon: 'fa:trash'}
+              ]
+            } else if (subtile.itemName.includes("Shed")) {
+              contextMenuOptions.value = [
+                { name: 'Set Skin', icon: 'fa:paint-brush' },
+                { name: 'Delete', icon: 'fa:trash'}
+              ]
+            } else {
+              contextMenuOptions.value = [
+                { name: 'Delete', icon: 'fa:trash'}
+              ]
+            }
+          
+            contextMenuItemIndex.value = i
+            break
+        }
+      }
+
+      if (!isContextMenuOpen.value) {
+        const startingTile = getTilePositionAt(
+            event.pageX - marginLeft.value,
+            event.pageY - marginTop.value
+        )
+        dragStart.value = { x: startingTile.x, y: startingTile.y }
+  
+        isDragging.value = true
+        isDraggingToErase.value = true
+        handleMouseOverMap(event)
+      }
     }
   }
 
@@ -572,18 +709,7 @@
         let bottomY = Math.max(dragStart.value.y, position.y)
         
         if (isDraggingToErase.value) {
-          subtilesWillBeErased.value = []
           willBeErased.value = []
-
-          for (let i = 0; i < subtileData.value.length; i++) {
-            if (subtileData.value[i].xEnd >= leftX
-              && subtileData.value[i].xStart <= rightX
-              && subtileData.value[i].yEnd >= topY
-              && subtileData.value[i].yStart <= bottomY
-              ) {
-              subtilesWillBeErased.value.push(subtileData.value[i].id)
-            }
-          }
 
           for (let x = leftX; x < rightX + 24; x+=24) {
             for (let y = topY; y < bottomY + 24; y+=24) {
