@@ -471,7 +471,18 @@
   }
 
   async function onSelectContextOption(option: string) {
-    if (option === 'Delete') {
+    if (option === 'Move') {
+      isPlacing.value = subtileData.value[contextMenuItemIndex.value].itemName
+      placingDimensions.value = {
+        name: isPlacing.value.split('/', 1)[1],
+        visible_x: subtileData.value[contextMenuItemIndex.value].visibleWidth / 4,
+        visible_y: subtileData.value[contextMenuItemIndex.value].visibleHeight / 4,
+        placement_x: subtileData.value[contextMenuItemIndex.value].collidableWidth / 4,
+        placement_y: subtileData.value[contextMenuItemIndex.value].collidableHeight / 4
+      }
+      subtileData.value.splice(contextMenuItemIndex.value, 1)
+      contextMenuItemIndex.value = -1
+    } else if (option === 'Delete') {
       subtileData.value.splice(contextMenuItemIndex.value, 1)
       contextMenuItemIndex.value = -1
     } else if (option === 'Apply Customization') {
@@ -570,20 +581,18 @@
 
             contextMenuStyle.value = `${verticalStyle} ${horizontalStyle}`
 
+            contextMenuOptions.value = [
+                { name: 'Move', icon: 'fa:arrows'},
+                { name: 'Delete', icon: 'fa:trash'}
+              ]
             if (subtile.itemName.includes("House")) {
-              contextMenuOptions.value = [
-                { name: 'Apply Customization', icon: 'fa:paint-brush' },
-                { name: 'Delete', icon: 'fa:trash'}
-              ]
+              contextMenuOptions.value.push(
+                { name: 'Apply Customization', icon: 'fa:paint-brush' }
+              )
             } else if (subtile.itemName.includes("Shed")) {
-              contextMenuOptions.value = [
-                { name: 'Set Skin', icon: 'fa:paint-brush' },
-                { name: 'Delete', icon: 'fa:trash'}
-              ]
-            } else {
-              contextMenuOptions.value = [
-                { name: 'Delete', icon: 'fa:trash'}
-              ]
+              contextMenuOptions.value.push(
+                { name: 'Set Skin', icon: 'fa:paint-brush' }
+              )
             }
           
             contextMenuItemIndex.value = i
@@ -879,7 +888,6 @@
     })
 
     subtileData.value = subtileData.value.filter((item) => !subtilesWillBeErased.value.includes(item.id))
-    
     subtileData.value.push(subtile)
 
     isPlacing.value = undefined

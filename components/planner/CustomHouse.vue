@@ -2,7 +2,7 @@
   <canvas
     ref="itemCanvas"
     :width="visibleWidth"
-    height=190
+    height=210
     class="no-select"
   />
 </template>
@@ -32,27 +32,27 @@ function buildHouse(data: CustomSet) {
     const patioImage = new Image()
     patioImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/' + data.patio.filename
     patioImage.onload = function() {
-      context.drawImage(patioImage, 0, 56, 252, 132)
+      context.drawImage(patioImage, 0, 75, 252, 132)
     }
     const doorImage = new Image()
     doorImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/' + data.door.filename
     doorImage.onload = function() {
-      context.drawImage(doorImage, 110, 104, 33, 44)
+      context.drawImage(doorImage, 110, 114, 33, 44)
     }
     const wallsImage = new Image()
     wallsImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/' + data.walls.filename
     wallsImage.onload = function() {
-      context.drawImage(wallsImage, 16, 76, 220, 72)
+      context.drawImage(wallsImage, 16, 86, 220, 72)
     }
     const roofImage = new Image()
     roofImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/' + data.roof.filename
     roofImage.onload = function() {
-      context.drawImage(roofImage, 10, 0, 231, 106)
+      context.drawImage(roofImage, 10, 0, 231, 120)
     }
     const windowsImage = new Image()
     windowsImage.src = 'https://farmdecoratorassets.blob.core.windows.net/decorations/' + data.windows.filename
     windowsImage.onload = function() {
-      context.drawImage(windowsImage, 25, 47, 202, 72)
+      context.drawImage(windowsImage, 25, 57, 202, 72)
     }
   }
 }
