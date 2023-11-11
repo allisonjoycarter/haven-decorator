@@ -19,7 +19,6 @@ const itemCanvas = ref(null as HTMLCanvasElement|null)
 
 onMounted(() => {
   if (itemCanvas !== null) {
-    console.log(props.customizations)
     buildHouse(props.customizations)
   }
 })

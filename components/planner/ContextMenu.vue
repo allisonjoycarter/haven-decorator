@@ -24,7 +24,6 @@
   const emit = defineEmits(['onSelectOption'])
 
   function onSelectOption(option: string) {
-    console.log("selected option: " + option)
     emit('onSelectOption', option)
   }
 

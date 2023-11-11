@@ -2,7 +2,8 @@
 interface PlaceableTile {
   x: number;
   y: number;
-  outOfBounds: boolean;
+  canPlant: boolean;
+  canBuild: boolean;
   usedFor: string|undefined;
 }
 
