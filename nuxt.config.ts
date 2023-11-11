@@ -18,5 +18,10 @@ export default defineNuxtConfig({
       posthogPublicKey: 'phc_pdfUOQFFBR8mzehV9TZmThswTqPcS2Tks0j6qkH4Va6',
       posthogHost: 'https://app.posthog.com'
     }
+  },
+  $production: {
+    generate: {
+      exclude: ['/planner/setup']
+    }
   }
 })

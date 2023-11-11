@@ -10,5 +10,7 @@ export interface PlacedItem {
   collidableWidth: number;
   collidableHeight: number;
   itemName: string;
+  overrideImage?: string;
+  houseCustomizationData?: any;
   coversTiles: string[];
 }

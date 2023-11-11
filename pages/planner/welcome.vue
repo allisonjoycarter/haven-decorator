@@ -28,16 +28,30 @@
             planner at that time. 
         </p>
       </div>
+      <div class="elevated-card my-4" id="updates">
+        <h2 class="text-lg font-semibold">Updates</h2>
+        <p>Current Version: 1.1.0</p>
+        <h3 class="text-md font-semibold">Version 1.1.0</h3>
+        <ul class="list-disc ml-6">
+          <li>Update collidable space on buildings (may affect previous layouts!)</li>
+          <li>Can no longer place buildings on cliffs, trees, water, or any tile not buildable in game</li>
+          <li>Can no longer place crops on cliffs, trees, water, or any tile not farmable in game</li>
+          <li>Right click on sheds to select a skin</li>
+          <li>Right click on house to apply customizations</li>
+          <li>Added a red dashed outline to show area building takes up, can be hidden using the grid opacity slider</li>
+          <li>Added a right click menu on buildings/trees/etc to delete and move. Moving removes skin/customization (this will be fixed in the future)</li>
+          <li>Buildings are not erased by drags. Crop and paths are still removed using right click drag</li>
+          <li>Fixed tree sizing</li>
+        </ul>
+      </div>
       <div class="elevated-card my-4">
         <h2 class="text-lg font-semibold">Future Ideas</h2>
         <p>Even though I felt the current setup is enough to deploy, here are some things I'm working on or thinking about adding!</p>
         <ul class="list-disc ml-6">
           <li>More accurate building sizing & collidable size</li>
-          <li>Right click to change building skins or tiers</li>
+          <li>Right click to change building tiers</li>
           <li>Filter items by region</li>
-          <li>Prevent placing on water, cliffs, etc</li>
           <li>Full undo/redo capabilty</li>
-          <li>Apply current house customization to the house in planner</li>
           <li>Totems & Scarecrows with ranges</li>
           <li>Optimizations for speed</li>
           <li>Mobile Support</li>

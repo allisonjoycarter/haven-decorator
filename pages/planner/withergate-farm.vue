@@ -12,16 +12,18 @@
       :grid-offset-left="-4"
       :vertical-tile-threshold=".9"
       :horizontal-tile-threshold=".35"
+      :bounds="boundsData"
       @go-to-map="goToPlannerArea"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
+import boundJson from "~/assets/planner_bounds/Withergate Farm_bounds.json"
+
+const boundsData = computed(() => boundJson.tileData)
 
 function goToPlannerArea(mapName: string) {
   navigateTo('/planner/' + mapName.toLowerCase().replaceAll(" ", "-").replace("'", ""))
 }
-
-
 </script>

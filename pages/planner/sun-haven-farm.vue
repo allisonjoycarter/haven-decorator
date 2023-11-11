@@ -12,12 +12,17 @@
       :grid-offset-left="7"
       :vertical-tile-threshold=".7"
       :horizontal-tile-threshold=".9"
+      :bounds="boundsData"
       @go-to-map="goToPlannerArea"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
+import boundJson from "~/assets/planner_bounds/Sun Haven Farm_bounds.json"
+
+const boundsData = computed(() => boundJson.tileData)
+
 function goToPlannerArea(mapName: string) {
   navigateTo('/planner/' + mapName.toLowerCase().replaceAll(" ", "-").replace("'", ""))
 }
