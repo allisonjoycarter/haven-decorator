@@ -4,7 +4,11 @@
     dark:bg-gray-900 dark:text-gray-200
     min-h-screen
     ">
-    <NavBar />
-    <slot />
+    <Title>
+      <NavBar />
+    </Title>
+    <Body>
+      <slot />
+    </Body>
   </div>
 </template>
