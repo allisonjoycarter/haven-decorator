@@ -20,15 +20,6 @@
 </template>
 
 <script lang="ts" setup>
-useSeoMeta({
-  title: 'Haven Decorator - Planner',
-  ogTitle: 'Haven Decorator - Planner',
-  description: 'Test out farm organizations!',
-  ogDescription: 'Test out farm organizations!',
-  ogImage: 'https://farmdecoratorassets.blob.core.windows.net/decorations/sample_house.png',
-  twitterCard: 'summary',
-})
-
 const plannerAreas = [
   { name: "Welcome", route: "/planner/welcome" },
   { name: "Sun Haven Farm", route: "/planner/sun-haven-farm" },
