@@ -30,6 +30,10 @@
 </template>
 
 <script lang="ts" setup>
+useSeoMeta({
+  robots: 'noindex, nofollow'
+})
+
 
 const maps = [
   {

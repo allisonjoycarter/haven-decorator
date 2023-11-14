@@ -1,6 +1,6 @@
 <template>
   <div class="py-3">
-      <h1 class="px-4 text-lg font-bold">Sun Haven Customizations</h1>
+      <h1 class="px-4 text-lg font-bold">Haven Decorator</h1>
       <div
         class="px-4 flex"
       >
