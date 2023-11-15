@@ -132,8 +132,8 @@ import type { SunHavenImage } from "~/models/image";
 useSeoMeta({
   title: 'Customizer - Haven Decorator',
   ogTitle: 'Customizer - Haven Decorator',
-  description: 'Try out tier 3 house customizations from the Hardware Store!',
-  ogDescription: 'Try out tier 3 house customizations from the Hardware Store!',
+  description: 'A fan-made website to preview out tier 3 house customizations from the Sun Haven Hardware Store! View images and mix-and-match different house styles to find the ones you like best.',
+  ogDescription: 'A fan-made website to preview out tier 3 house customizations from the Sun Haven Hardware Store! View images and mix-and-match different house styles to find the ones you like best.',
   ogImage: 'https://farmdecoratorassets.blob.core.windows.net/decorations/sample_house.png',
   twitterCard: 'summary',
 })

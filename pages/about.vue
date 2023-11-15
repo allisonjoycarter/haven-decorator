@@ -6,10 +6,10 @@
           <h3 class="text-xl font-semibold">About</h3>
           <div>
             <p>
-              This is a pet project designed to make trying out new house customization options fun and easy.
-               Normally you can find me working on the <a href="https://sun-haven.fandom.com/wiki/Sun_Haven_Wiki" target="_blank">Sun Haven Wiki</a>,
+              Haven Decorator is a pet project started to preview house customization options in Sun Haven. Since then, I've
+              been slowly adding to it, creating a farm layout planner. Normally you can find me working on the <a href="https://sun-haven.fandom.com/wiki/Sun_Haven_Wiki" target="_blank">Sun Haven Wiki</a>,
                 but it doesn't allow for interactive setups like this website. Eventually I'd like to expand this to preview 
-              other kinds of decorating, but those would be much more expansive additions. I hope you enjoy!
+              house decorating and more. I hope you enjoy!
             </p>
             <p>
               - Doubleterrainbow
@@ -63,8 +63,8 @@
 useSeoMeta({
   title: 'About Haven Decorator',
   ogTitle: 'About Haven Decorator',
-  description: 'Haven Decorator was made with love - or at least - not hate. Oh, and Monster Fruit. Lots of Monster Fruit.',
-  ogDescription: 'Haven Decorator was made with love - or at least - not hate. Oh, and Monster Fruit. Lots of Monster Fruit.',
+  description: 'Haven Decorator is a fan-made website for Sun Haven made with love - or at least - not hate. Oh, and Monster Fruit. Lots of Monster Fruit.',
+  ogDescription: 'Haven Decorator is a fan-made website for Sun Haven made with love - or at least - not hate. Oh, and Monster Fruit. Lots of Monster Fruit.',
   ogImage: 'https://farmdecoratorassets.blob.core.windows.net/decorations/sample_house.png',
   twitterCard: 'summary',
 })
