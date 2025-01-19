@@ -7,9 +7,7 @@
           <div>
             <p>
               Haven Decorator is a pet project started to preview house customization options in Sun Haven. Since then, I've
-              been slowly adding to it, creating a farm layout planner. Normally you can find me working on the <a href="https://sun-haven.fandom.com/wiki/Sun_Haven_Wiki" target="_blank">Sun Haven Wiki</a>,
-                but it doesn't allow for interactive setups like this website. Eventually I'd like to expand this to preview 
-              house decorating and more. I hope you enjoy!
+              been slowly adding to it, creating a farm layout planner. Also be sure to check out the <a href="https://sunhaven.wiki.gg/wiki/Sun_Haven_Wiki" target="_blank">Sun Haven Wiki</a>! This project started because of my work on there. Feel free to mention me in the discord if you have any feedback using @doubleterrainbow. I'm easily summoned. I hope you enjoy!
             </p>
             <p>
               - Doubleterrainbow
